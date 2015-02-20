@@ -7,8 +7,10 @@
 #define NUM_DRIVE_LIGHTS 25
 CRGB leds[NUM_LEDS];
 CRGB allianceColor = CRGB::Blue;
+byte alliancecolor = 0;
 float liftPosition = 59.0;
-int a, b, c, v, w, y, z;
+int a, b, v, w, y, z;
+byte c;
 
 #define TEST_ENABLED 1
 #define TEST_DISABLED 2
@@ -20,8 +22,8 @@ int a, b, c, v, w, y, z;
 #define FINISHED 8
 #define ERROR_MODE 9
 
-byte mode = TEST_ENABLED;
-byte frame = 0;
+byte mode = TELEOP_DISABLED;
+byte frame = 24;
 
 
 void setup() {
@@ -44,40 +46,24 @@ void testEnabled() {
   }
   leds[NUM_LEDS-lightsOn-1] = CRGB::Orange;
   FastLED.show();
-  delay(5000);
 }
 
 void testDisabled() {
-  if (frame > 7) frame = 0;
+  if (frame > 254) c = 1;
+  if (frame < 25) c = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    byte c = 0;
-    switch (frame) {
+    switch (c) {
       case 0:
-        c = 127;
+        frame = frame + 1;
         break;
       case 1:
-        c = 95;
+        frame = frame - 1;
         break;
-      case 2:
-        c = 63;
-        break;
-      case 3:
-        c = 31;
-        break;
-      case 4:
-        c = 15;
-        break;
-      case 5:
-        c = 31;
-        break;
-      case 6:
-        c = 63;
-        break;
-      case 7:
-        c = 95;
-        break;
+      default:
+        frame++;
+      break;
     }    
-    leds[x] = CRGB(c,c,0);
+    leds[x] = CRGB(frame, frame, 0);
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
@@ -91,13 +77,30 @@ void testDisabled() {
   }
   leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+NUM_LIFT_LIGHTS-lightsOn-1] = CRGB::Orange;
   FastLED.show();
-  delay(250);
-  frame++;
+  delay(80);
 }
 
 void autoDisabled() {
+  if (frame > 254) c = 1;
+  if (frame < 25) c = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    leds[x] = allianceColor;
+    switch (c) {
+      case 0:
+        frame = frame + 1;
+        break;
+      case 1:
+        frame = frame - 1;
+        break;
+      default:
+        frame++;
+      break;
+    }
+    if (alliancecolor == 1) {
+      leds[x] = CRGB(0, 0, frame);
+    }
+    else {
+      leds[x] = CRGB(frame, 0, 0);
+    }
   }
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
       leds[x] = CRGB::White;
@@ -112,7 +115,7 @@ void autoDisabled() {
       leds[x] = CRGB::Yellow;
     }
   FastLED.show();
-  delay(5000);
+  delay(80);
 }
 
 void autoEnabled() {
@@ -131,7 +134,6 @@ void autoEnabled() {
   }
   leds[NUM_LEDS-lightsOn-1] = CRGB::Red;
   FastLED.show();
-  delay(5000);
 }
 
 void teleopEnabled() {
@@ -150,12 +152,29 @@ void teleopEnabled() {
   }
   leds[NUM_LEDS-lightsOn-1] = CRGB::Blue;
   FastLED.show();
-  delay(5000);
 }
 
 void teleopDisabled() {
+  if (frame > 254) c = 1;
+  if (frame < 25) c = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    leds[x] = allianceColor;
+    switch (c) {
+      case 0:
+        frame = frame + 1;
+        break;
+      case 1:
+        frame = frame - 1;
+        break;
+      default:
+        frame++;
+      break;
+    }
+    if (alliancecolor == 1) {
+      leds[x] = CRGB(0, 0, frame);
+    }
+    else {
+      leds[x] = CRGB(frame, 0, 0);
+    }
   }
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
       leds[x] = CRGB::White;
@@ -170,7 +189,7 @@ void teleopDisabled() {
       leds[x] = CRGB::Green;
     }
   FastLED.show();
-  delay(5000);
+  delay(80);
 }
 
 void disconnected() { 
