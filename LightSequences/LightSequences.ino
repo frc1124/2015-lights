@@ -6,8 +6,7 @@
 #define NUM_LIFT_LIGHTS 75
 #define NUM_DRIVE_LIGHTS 25
 CRGB leds[NUM_LEDS];
-CRGB allianceColor = CRGB::Blue;
-byte alliancecolor = 0;
+char allianceColor = 'B';
 float liftPosition = 59.0;
 int a, b, v, w, y, z;
 byte c;
@@ -21,6 +20,7 @@ byte c;
 #define DISCONNECTED 7
 #define FINISHED 8
 #define ERROR_MODE 9
+#define OFF 10
 
 byte mode = TELEOP_DISABLED;
 byte frame = 24;
@@ -95,7 +95,7 @@ void autoDisabled() {
         frame++;
       break;
     }
-    if (alliancecolor == 1) {
+    if (allianceColor == 'B') {
       leds[x] = CRGB(0, 0, frame);
     }
     else {
@@ -120,7 +120,12 @@ void autoDisabled() {
 
 void autoEnabled() {
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    leds[x] = allianceColor;
+    if (allianceColor == 'B') {
+      leds[x] = CRGB::Blue;
+    }
+    else {
+      leds[x] = CRGB::Red;
+    }
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
@@ -138,7 +143,12 @@ void autoEnabled() {
 
 void teleopEnabled() {
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    leds[x] = allianceColor;
+    if (allianceColor == 'B') {
+      leds[x] = CRGB::Blue;
+    }
+    else {
+      leds[x] = CRGB::Red;
+    }
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
@@ -169,7 +179,7 @@ void teleopDisabled() {
         frame++;
       break;
     }
-    if (alliancecolor == 1) {
+    if (allianceColor == 'B') {
       leds[x] = CRGB(0, 0, frame);
     }
     else {
@@ -212,6 +222,7 @@ void disconnected() {
     leds[i+11] = CRGB::Black;
   }
   FastLED.show();
+  if (mode != DISCONNECTED) return;
   delay(75);
   for (int i=0;i<NUM_LEDS-12;i+=12) {
     leds[i] = blue;
@@ -229,6 +240,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-12;i+=12) {
     leds[i] = blue;
     leds[i+1] = CRGB::Black;
@@ -245,6 +257,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-12;i+=12) {
     leds[i] = CRGB::Black;
     leds[i+1] = gold;
@@ -261,6 +274,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-12;i+=12) {
     leds[i] = gold;
     leds[i+1] = gold;
@@ -277,6 +291,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   // Now turn the LED off, then pause
   for (int i=0;i<NUM_LEDS-12;i+=12) {
     leds[i] = gold;
@@ -294,6 +309,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-12; i+=12) {
     leds[i] = gold;
     leds[i+1] = CRGB::Black;
@@ -310,6 +326,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-12; i+=12) {
     leds[i] = CRGB::Black;
     leds[i+1] = red;
@@ -326,6 +343,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-12; i+=12) {
     leds[i] = leds[i+1] = leds[i+2] = red;
     leds[i+3] = CRGB::Black;
@@ -336,6 +354,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-12; i+=12) {
     leds[i] = leds[i+1] = red;
     leds[i+2] = CRGB::Black;
@@ -347,6 +366,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-12; i+=12) {
     leds[i] = red;
     leds[i+1] = CRGB::Black;
@@ -358,6 +378,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-12; i+=12) {
     leds[i] = CRGB::Black;
     leds[i+1] = blue;
@@ -374,6 +395,7 @@ void disconnected() {
   }
   FastLED.show();
   delay(75);
+  if (mode != DISCONNECTED) return;
 }
 
 void on(int t) {
@@ -426,11 +448,13 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(300);
       off(75);
@@ -444,6 +468,7 @@ void finished() {
       off(75);
       on(300);
       off(500);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
@@ -453,11 +478,13 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
@@ -465,6 +492,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(300);
       off(75);
@@ -474,6 +502,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
@@ -483,6 +512,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
@@ -492,9 +522,11 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(75);
       off(75);
@@ -502,6 +534,7 @@ void finished() {
       off(75);
       on(75);
       off(500);
+      if (mode != FINISHED) return;
       break;
     case 1:
       //Ubernerds
@@ -512,6 +545,7 @@ void finished() {
       off(75);
       on(300);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300);
       off(75);
@@ -521,9 +555,11 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(75);
@@ -531,14 +567,17 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
       
       on(300);
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(75);
@@ -546,6 +585,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300);
       off(75);
@@ -553,6 +593,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(75);
@@ -560,6 +601,7 @@ void finished() {
       off(75);
       on(75);
       off(500);
+      if (mode != FINISHED) return;
       break;
     case 2:
       //Uberbots
@@ -570,6 +612,7 @@ void finished() {
       off(75);
       on(300);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300);
       off(75);
@@ -579,9 +622,11 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(75);
@@ -589,6 +634,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300);
       off(75);
@@ -598,6 +644,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300);
       off(75);
@@ -605,9 +652,11 @@ void finished() {
       off(75);
       on(300);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300); 
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(75);
@@ -615,6 +664,7 @@ void finished() {
       off(75);
       on(75);
       off(500);
+      if (mode != FINISHED) return;
       break;
     case 3:
       //Niezreicki's rule
@@ -623,14 +673,17 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
       on(300);
       off(75);
@@ -640,6 +693,7 @@ void finished() {
       off(75);
       on(75);
       off(300);
+      if (mode != FINISHED) return;
   
   on(75);
   off(75);
@@ -647,35 +701,41 @@ void finished() {
   off(75);
   on(75);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
   on(75);
   off(300);
-  
-  on(300);
-  off(75);
-  on(75);
-  off(75);
-  on(300);
-  off(75);
-  on(75);
-  off(300);
+  if (mode != FINISHED) return;
   
   on(300);
   off(75);
   on(75);
   off(75);
   on(300);
+  off(75);
+  on(75);
   off(300);
+  if (mode != FINISHED) return;
+  
+  on(300);
+  off(75);
+  on(75);
+  off(75);
+  on(300);
+  off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
   on(75);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
@@ -689,6 +749,7 @@ void finished() {
   off(75);
   on(75);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
@@ -696,6 +757,7 @@ void finished() {
   off(75);
   on(75);
   off(500);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
@@ -703,6 +765,7 @@ void finished() {
   off(75);
   on(75);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
@@ -710,6 +773,7 @@ void finished() {
   off(75);
   on(300);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(75);
@@ -719,9 +783,11 @@ void finished() {
   off(75);
   on(75);
   off(300);
+  if (mode != FINISHED) return;
   
   on(75);
   off(500);
+  if (mode != FINISHED) return;
       break;
     default:
     b = 30;
@@ -739,6 +805,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::Red;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::White;
@@ -748,6 +815,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = CRGB::Red;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::White;
@@ -757,6 +825,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = CRGB::Red;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::White;
@@ -766,6 +835,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = CRGB::Red;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::White;
@@ -775,6 +845,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::White;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::Blue;
@@ -783,6 +854,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::White;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::Blue;
@@ -792,6 +864,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = CRGB::White;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::Blue;
@@ -801,6 +874,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = CRGB::White;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::Blue;
@@ -810,6 +884,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = CRGB::White;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::Blue;
@@ -819,6 +894,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::Blue;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::Black;
@@ -827,6 +903,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::Blue;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::Black;
@@ -836,6 +913,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = CRGB::Blue;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::Black;
@@ -845,6 +923,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = CRGB::Blue;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::Black;
@@ -854,6 +933,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = CRGB::Blue;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::Black;
@@ -863,6 +943,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::Black;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::Red;
@@ -871,6 +952,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::Black;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::Red;
@@ -880,6 +962,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = leds[z+2] = CRGB::Black;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::Red;
@@ -889,6 +972,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = leds[z+1] = CRGB::Black;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::Red;
@@ -898,6 +982,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     leds[z] = CRGB::Black;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::Red;
@@ -907,6 +992,7 @@ void finished() {
   }
   FastLED.show();
   delay(50);
+  if (mode != FINISHED) return;
  }
 }
 
@@ -1042,6 +1128,12 @@ void errorMode() {
   delay(50);
 }
 
+void off() {
+  for (int q=0; q<NUM_LEDS; q++) {
+    leds[q] = CRGB::Black;
+  }
+}
+
 void loop() {
   switch (mode) {
   case TEST_ENABLED:
@@ -1070,6 +1162,9 @@ void loop() {
     break;
   case ERROR_MODE:
     errorMode();
+    break;
+  case OFF:
+    off();
     break;
   }
 }
