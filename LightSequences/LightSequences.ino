@@ -1,15 +1,17 @@
 #include "FastLED.h"
-#define NUM_LEDS 175
+#define NUM_LEDS 117
+#define DRIVE_LEFT_DATA_PIN 10
+#define LIFT_LEFT_DATA_PIN 9
+#define DATA_PIN 5
 #define DATA_PIN 5
 #define CLOCK_PIN 13
 #define MAX_LIFT 59
-#define NUM_LIFT_LIGHTS 75
-#define NUM_DRIVE_LIGHTS 25
+#define NUM_LIFT_LIGHTS 87
+#define NUM_DRIVE_LIGHTS 30
 CRGB leds[NUM_LEDS];
-char allianceColor = 'B';
+char allianceColor = 'R';
 float liftPosition = 59.0;
-int a, b, v, w, y, z;
-byte c;
+int a, b, c, v, w, y, z, target = 0, maxTarget = 255;
 
 #define TEST_ENABLED 1
 #define TEST_DISABLED 2
@@ -22,12 +24,14 @@ byte c;
 #define ERROR_MODE 9
 #define OFF 10
 
-byte mode = TELEOP_DISABLED;
-byte frame = 24;
+byte mode = DISCONNECTED;
+int frame = 24;
 
 
 void setup() {
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
+  FastLED.addLeds<NEOPIXEL, DRIVE_LEFT_DATA_PIN>(leds, NUM_DRIVE_LIGHTS);
+  FastLED.addLeds<NEOPIXEL, LIFT_LEFT_DATA_PIN>(&leds[NUM_DRIVE_LIGHTS], NUM_LIFT_LIGHTS);
+  Serial.begin(9600);
 }
 
 void testEnabled() {
@@ -49,7 +53,7 @@ void testEnabled() {
 }
 
 void testDisabled() {
-  if (frame > 254) c = 1;
+  if (frame > 220) c = 1;
   if (frame < 25) c = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (c) {
@@ -62,8 +66,8 @@ void testDisabled() {
       default:
         frame++;
       break;
-    }    
-    leds[x] = CRGB(frame, frame, 0);
+    }
+      leds[x] = CRGB(frame, frame, 0);
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
@@ -72,16 +76,27 @@ void testDisabled() {
     leds[x] = CRGB::White;
   }
   leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Orange;
-  for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_DRIVE_LIGHTS+2*NUM_LIFT_LIGHTS-lightsOn-1; x++) {
-    leds[x] = CRGB::White;
-  }
-  leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+NUM_LIFT_LIGHTS-lightsOn-1] = CRGB::Orange;
   FastLED.show();
-  delay(80);
+  delay(50);
 }
 
-void autoDisabled() {
-  if (frame > 254) c = 1;
+void pulseDriveTrain() {
+/*
+  if (frame > 254) frame = 0;
+  c = (frame < 128) ? frame : 128-(frame%127);
+  if (c < 10) c = 10;
+  CRGB color = (allianceColor == 'B') ? CRGB(0,0,c) : CRGB(c,0,0);
+Serial.print("frame: " );
+Serial.println(frame);
+Serial.print("c: " );
+Serial.println(c);
+
+  for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
+    leds[x] = color;
+  }
+  frame++;
+*/
+  if (frame > 220) c = 1;
   if (frame < 25) c = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (c) {
@@ -102,6 +117,11 @@ void autoDisabled() {
       leds[x] = CRGB(frame, 0, 0);
     }
   }
+
+}
+
+void autoDisabled() {
+  pulseDriveTrain();
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
       leds[x] = CRGB::White;
     }
@@ -115,7 +135,7 @@ void autoDisabled() {
       leds[x] = CRGB::Yellow;
     }
   FastLED.show();
-  delay(80);
+  delay(10);
 }
 
 void autoEnabled() {
@@ -165,27 +185,7 @@ void teleopEnabled() {
 }
 
 void teleopDisabled() {
-  if (frame > 254) c = 1;
-  if (frame < 25) c = 0;
-  for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    switch (c) {
-      case 0:
-        frame = frame + 1;
-        break;
-      case 1:
-        frame = frame - 1;
-        break;
-      default:
-        frame++;
-      break;
-    }
-    if (allianceColor == 'B') {
-      leds[x] = CRGB(0, 0, frame);
-    }
-    else {
-      leds[x] = CRGB(frame, 0, 0);
-    }
-  }
+  pulseDriveTrain();
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
       leds[x] = CRGB::White;
     }
@@ -199,7 +199,29 @@ void teleopDisabled() {
       leds[x] = CRGB::Green;
     }
   FastLED.show();
-  delay(80);
+  delay(100);
+}
+
+void disconnected2() {
+  CRGB blue  = CRGB(13, 91, 223);
+  CRGB gold = CRGB(215, 180, 36);
+  CRGB red = CRGB(128, 3, 5);
+  CRGB pattern[12];
+  pattern[0] = pattern[1] = pattern[2] = red;
+  pattern[3] = CRGB::Black;
+  pattern[4] = pattern[5] = pattern[6] = gold;
+  pattern[7] = CRGB::Black;
+  pattern[8] = pattern[9] = pattern[10] = blue;
+  pattern[11] = CRGB::Black;
+
+  for (int start=0;start<12;start++) {
+    for (int x=0;x<NUM_LEDS;x++) {
+      int y = (start+(x%12))%12;
+      leds[x] = pattern[y];
+    }
+    FastLED.show();
+    delay(50);
+  }
 }
 
 void disconnected() { 
@@ -207,7 +229,7 @@ void disconnected() {
   CRGB blue  = CRGB(13, 91, 223);
   CRGB gold = CRGB(215, 180, 36);
   CRGB red = CRGB(128, 3, 5);
-  for (int i=0;i<NUM_LEDS-12;i+=12) {
+  for (int i=0;i<NUM_LEDS-10;i+=12) {
     leds[i] = blue;
     leds[i+1] = blue;
     leds[i+2] = blue;
@@ -224,7 +246,7 @@ void disconnected() {
   FastLED.show();
   if (mode != DISCONNECTED) return;
   delay(75);
-  for (int i=0;i<NUM_LEDS-12;i+=12) {
+  for (int i=0;i<NUM_LEDS-10;i+=12) {
     leds[i] = blue;
     leds[i+1] = blue;
     leds[i+2] = CRGB::Black;
@@ -241,7 +263,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0;i<NUM_LEDS-12;i+=12) {
+  for (int i=0;i<NUM_LEDS-10;i+=12) {
     leds[i] = blue;
     leds[i+1] = CRGB::Black;
     leds[i+2] = gold;
@@ -258,7 +280,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0;i<NUM_LEDS-12;i+=12) {
+  for (int i=0;i<NUM_LEDS-10;i+=12) {
     leds[i] = CRGB::Black;
     leds[i+1] = gold;
     leds[i+2] = gold;
@@ -275,7 +297,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0;i<NUM_LEDS-12;i+=12) {
+  for (int i=0;i<NUM_LEDS-10;i+=12) {
     leds[i] = gold;
     leds[i+1] = gold;
     leds[i+2] = gold;
@@ -293,7 +315,7 @@ void disconnected() {
   delay(75);
   if (mode != DISCONNECTED) return;
   // Now turn the LED off, then pause
-  for (int i=0;i<NUM_LEDS-12;i+=12) {
+  for (int i=0;i<NUM_LEDS-10;i+=12) {
     leds[i] = gold;
     leds[i+1] = gold;
     leds[i+2] = CRGB::Black;
@@ -310,7 +332,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0; i<NUM_LEDS-12; i+=12) {
+  for (int i=0; i<NUM_LEDS-10; i+=12) {
     leds[i] = gold;
     leds[i+1] = CRGB::Black;
     leds[i+2] = red;
@@ -327,7 +349,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0; i<NUM_LEDS-12; i+=12) {
+  for (int i=0; i<NUM_LEDS-10; i+=12) {
     leds[i] = CRGB::Black;
     leds[i+1] = red;
     leds[i+2] = red;
@@ -344,7 +366,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0; i<NUM_LEDS-12; i+=12) {
+  for (int i=0; i<NUM_LEDS-10; i+=12) {
     leds[i] = leds[i+1] = leds[i+2] = red;
     leds[i+3] = CRGB::Black;
     leds[i+4] = leds[i+5] = leds[i+6] = blue;
@@ -355,7 +377,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0; i<NUM_LEDS-12; i+=12) {
+  for (int i=0; i<NUM_LEDS-10; i+=12) {
     leds[i] = leds[i+1] = red;
     leds[i+2] = CRGB::Black;
     leds[i+3] = leds[i+4] = leds[i+5] = blue;
@@ -367,7 +389,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0; i<NUM_LEDS-12; i+=12) {
+  for (int i=0; i<NUM_LEDS-10; i+=12) {
     leds[i] = red;
     leds[i+1] = CRGB::Black;
     leds[i+2] = leds[i+3] = leds[i+4] = blue;
@@ -379,7 +401,7 @@ void disconnected() {
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
-  for (int i=0; i<NUM_LEDS-12; i+=12) {
+  for (int i=0; i<NUM_LEDS-10; i+=12) {
     leds[i] = CRGB::Black;
     leds[i+1] = blue;
     leds[i+2] = blue;
@@ -1128,12 +1150,6 @@ void errorMode() {
   delay(50);
 }
 
-void off() {
-  for (int q=0; q<NUM_LEDS; q++) {
-    leds[q] = CRGB::Black;
-  }
-}
-
 void loop() {
   switch (mode) {
   case TEST_ENABLED:
@@ -1155,7 +1171,7 @@ void loop() {
     teleopDisabled();
     break;
   case DISCONNECTED:
-    disconnected();
+    disconnected2();
     break;
   case FINISHED:
     finished();
@@ -1164,7 +1180,7 @@ void loop() {
     errorMode();
     break;
   case OFF:
-    off();
+    off(0);
     break;
   }
 }
