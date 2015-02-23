@@ -1,4 +1,5 @@
 #include "FastLED.h"
+
 #define NUM_LEDS 117
 #define DRIVE_LEFT_DATA_PIN 10
 #define LIFT_LEFT_DATA_PIN 9
@@ -11,7 +12,7 @@
 CRGB leds[NUM_LEDS];
 char allianceColor = 'R';
 float liftPosition = 59.0;
-int a, b, c, v, w, y, z, target = 0, maxTarget = 255;
+int a, b, c, v, w, y, z;
 
 #define TEST_ENABLED 1
 #define TEST_DISABLED 2
@@ -42,13 +43,12 @@ void testEnabled() {
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
-  leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Orange;
-  for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-lightsOn-1; x++) {
-    leds[x] = CRGB::White;
-  }
-  leds[NUM_LEDS-lightsOn-1] = CRGB::Orange;
+  int y = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
+  if (y >= NUM_LEDS) y = NUM_LEDS-1;
+  leds[y] = CRGB::Orange;
   FastLED.show();
 }
 
@@ -67,35 +67,24 @@ void testDisabled() {
         frame++;
       break;
     }
+    if (x >= NUM_LEDS) break;
       leds[x] = CRGB(frame, frame, 0);
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn =  NUM_LIFT_LIGHTS - lights;
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
-  leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Orange;
+  int y = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
+  if (y >= NUM_LEDS) y = NUM_LEDS-1;
+  leds[y] = CRGB::Orange;
   FastLED.show();
   delay(50);
 }
 
 void pulseDriveTrain() {
-/*
-  if (frame > 254) frame = 0;
-  c = (frame < 128) ? frame : 128-(frame%127);
-  if (c < 10) c = 10;
-  CRGB color = (allianceColor == 'B') ? CRGB(0,0,c) : CRGB(c,0,0);
-Serial.print("frame: " );
-Serial.println(frame);
-Serial.print("c: " );
-Serial.println(c);
-
-  for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    leds[x] = color;
-  }
-  frame++;
-*/
   if (frame > 220) c = 1;
   if (frame < 25) c = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
@@ -110,28 +99,36 @@ Serial.println(c);
         frame++;
       break;
     }
-    if (allianceColor == 'B') {
+    switch (allianceColor) {
+    case 'B':
       leds[x] = CRGB(0, 0, frame);
-    }
-    else {
+      break;
+    case 'R':
       leds[x] = CRGB(frame, 0, 0);
+      break;
+    default:
+      leds[x] = CRGB::Black;
+      break;
     }
   }
-
 }
 
 void autoDisabled() {
   pulseDriveTrain();
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
+      if (x >= NUM_LEDS) break;
       leds[x] = CRGB::White;
     }
     for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
+      if (x >= NUM_LEDS) break;
       leds[x] = CRGB::Yellow;
     }
     for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x<NUM_LEDS; x+=2) {
+      if (x >= NUM_LEDS) break;
       leds[x] = CRGB::White;
     }
     for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS; x+=2) {
+      if (x >= NUM_LEDS) break;
       leds[x] = CRGB::Yellow;
     }
   FastLED.show();
@@ -140,21 +137,29 @@ void autoDisabled() {
 
 void autoEnabled() {
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    if (allianceColor == 'B') {
+    if (x >= NUM_LEDS) break;
+    switch (allianceColor) {
+    case 'B':
       leds[x] = CRGB::Blue;
-    }
-    else {
+      break;
+    case 'R':
       leds[x] = CRGB::Red;
+      break;
+    default:
+      leds[x] = CRGB::Black;
+      break;
     }
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
   leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Red;
   for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-lightsOn-1; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
   leds[NUM_LEDS-lightsOn-1] = CRGB::Red;
@@ -163,21 +168,29 @@ void autoEnabled() {
 
 void teleopEnabled() {
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    if (allianceColor == 'B') {
+    if (x >= NUM_LEDS) break;
+    switch (allianceColor) {
+    case 'B':
       leds[x] = CRGB::Blue;
-    }
-    else {
+      break;
+    case 'R':
       leds[x] = CRGB::Red;
+      break;
+    default:
+      leds[x] = CRGB::Black;
+      break;
     }
   }
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
   leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Blue;
   for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-lightsOn-1; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
   leds[NUM_LEDS-lightsOn-1] = CRGB::Blue;
@@ -187,15 +200,19 @@ void teleopEnabled() {
 void teleopDisabled() {
   pulseDriveTrain();
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
+    if (x >= NUM_LEDS) break;
       leds[x] = CRGB::White;
     }
     for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
+    if (x >= NUM_LEDS) break;
       leds[x] = CRGB::Green;
     }
     for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-1; x+=2) {
+    if (x >= NUM_LEDS) break;
       leds[x] = CRGB::White;
     }
     for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+2; x<NUM_LEDS-1; x+=2) {
+    if (x >= NUM_LEDS) break;
       leds[x] = CRGB::Green;
     }
   FastLED.show();
@@ -217,6 +234,7 @@ void disconnected2() {
   for (int start=0;start<12;start++) {
     for (int x=0;x<NUM_LEDS;x++) {
       int y = (start+(x%12))%12;
+      if (x >= NUM_LEDS) break;
       leds[x] = pattern[y];
     }
     FastLED.show();
@@ -230,85 +248,145 @@ void disconnected() {
   CRGB gold = CRGB(215, 180, 36);
   CRGB red = CRGB(128, 3, 5);
   for (int i=0;i<NUM_LEDS-10;i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = blue;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = blue;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = blue;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = CRGB::Black;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = gold; //Red
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = gold;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = gold;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = CRGB::Black;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = red; //Blue
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = red;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = red;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = CRGB::Black;
   }
   FastLED.show();
   if (mode != DISCONNECTED) return;
   delay(75);
   for (int i=0;i<NUM_LEDS-10;i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = blue;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = blue;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = CRGB::Black;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = gold;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = gold; //Red
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = gold;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = CRGB::Black;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = red;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = red; //Blue
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = red;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = CRGB::Black;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = blue;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = blue;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = CRGB::Black;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = gold;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = gold;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = gold; //Red
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = CRGB::Black;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = red;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = red;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = red; //Blue
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = CRGB::Black;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = blue;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = blue;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = CRGB::Black;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = gold;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = gold;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = gold;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = CRGB::Black; //Red
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = red;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = red;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = red;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = CRGB::Black; //Blue
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = blue;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = blue;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = blue;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = gold;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = gold;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = gold;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = CRGB::Black;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = red; //Red
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = red;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = red;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = CRGB::Black;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = blue; //Blue
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = blue;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = blue;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = CRGB::Black;
   }
   FastLED.show();
@@ -316,103 +394,171 @@ void disconnected() {
   if (mode != DISCONNECTED) return;
   // Now turn the LED off, then pause
   for (int i=0;i<NUM_LEDS-10;i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = gold;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = gold;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = CRGB::Black;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = red;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = red; //Red
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = red;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = CRGB::Black; //Blue
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = blue;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = blue;
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = blue;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = CRGB::Black;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = gold;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = gold;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = CRGB::Black;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = red;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = red; //Red
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = red; //Blue
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = CRGB::Black;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = blue;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = blue;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = blue;
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = CRGB::Black;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = gold;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = gold;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = CRGB::Black;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = red;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = red;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = red; //Red
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = CRGB::Black; //Blue
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = blue;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = blue;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = blue;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = CRGB::Black;
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = gold;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = gold;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = gold;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
+    if (i+2 >= NUM_LEDS) break;
     leds[i] = leds[i+1] = leds[i+2] = red;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = CRGB::Black;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+4] = leds[i+5] = leds[i+6] = blue;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = CRGB::Black;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+8] = leds[i+9] = leds[i+10] = gold;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = CRGB::Black;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
+    if (i+1 >= NUM_LEDS) break;
     leds[i] = leds[i+1] = red;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = CRGB::Black;
+    if (i+5 >= NUM_LEDS) break;
     leds[i+3] = leds[i+4] = leds[i+5] = blue;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = CRGB::Black;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+7] = leds[i+8] = leds[i+9] = gold;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = CRGB::Black;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = red;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = red;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = CRGB::Black;
+    if (i+4 >= NUM_LEDS) break;
     leds[i+2] = leds[i+3] = leds[i+4] = blue;
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = CRGB::Black;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+6] = leds[i+7] = leds[i+8] = gold;
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = CRGB::Black;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+10] = leds[i+11] = red;
   }
   FastLED.show();
   delay(75);
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
+    if (i >= NUM_LEDS) break;
     leds[i] = CRGB::Black;
+    if (i+1 >= NUM_LEDS) break;
     leds[i+1] = blue;
+    if (i+2 >= NUM_LEDS) break;
     leds[i+2] = blue;
+    if (i+3 >= NUM_LEDS) break;
     leds[i+3] = blue; //Red
+    if (i+4 >= NUM_LEDS) break;
     leds[i+4] = CRGB::Black; //Blue
+    if (i+5 >= NUM_LEDS) break;
     leds[i+5] = gold;
+    if (i+6 >= NUM_LEDS) break;
     leds[i+6] = gold;
+    if (i+7 >= NUM_LEDS) break;
     leds[i+7] = gold;
+    if (i+8 >= NUM_LEDS) break;
     leds[i+8] = CRGB::Black;
+    if (i+9 >= NUM_LEDS) break;
     leds[i+9] = red;
+    if (i+10 >= NUM_LEDS) break;
     leds[i+10] = red;
+    if (i+11 >= NUM_LEDS) break;
     leds[i+11] = red;
   }
   FastLED.show();
@@ -427,6 +573,7 @@ void on(int t) {
   for (int z=0; z<20; z++) {
   y = random(NUM_LEDS-3);
   for(int x=y; x<y+3; x++) {
+    if (x >= NUM_LEDS) break;
     int color = random(3);
     switch (color) {
       case 0:
@@ -450,6 +597,7 @@ void on(int t) {
 
 void off(int t) {
   for(int x=0; x<NUM_LEDS; x++) {
+    if (x >= NUM_LEDS) break;
     leds[x]= CRGB::Black;
   }
   FastLED.show();
@@ -814,202 +962,300 @@ void finished() {
     default:
     b = 30;
       for (int x=0; x<NUM_LEDS; x++) {
+        if (x >= NUM_LEDS) break;
         leds[x] = CRGB::Black;
       }
       break;
   }
   for (int x=0; x<b; x++) {
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+4 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::Red;
+    if (z+9 >= NUM_LEDS) break;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::White;
+    if (z+14 >= NUM_LEDS) break;
     leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = CRGB::Blue;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+3 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::Red;
+    if (z+8 >= NUM_LEDS) break;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::White;
+    if (z+13 >= NUM_LEDS) break;
     leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = CRGB::Blue;
+    if (z+18 >= NUM_LEDS) break;
     leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = CRGB::Black;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+19] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+2 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = CRGB::Red;
+    if (z+7 >= NUM_LEDS) break;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::White;
+    if (z+12 >= NUM_LEDS) break;
     leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = CRGB::Blue;
+    if (z+17 >= NUM_LEDS) break;
     leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = CRGB::Black;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+18] = leds[z+19] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+1 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = CRGB::Red;
+    if (z+6 >= NUM_LEDS) break;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::White;
+    if (z+11 >= NUM_LEDS) break;
     leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = CRGB::Blue;
+    if (z+16 >= NUM_LEDS) break;
     leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = CRGB::Black;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z >= NUM_LEDS) break;
     leds[z] = CRGB::Red;
+    if (z+5 >= NUM_LEDS) break;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::White;
+    if (z+10 >= NUM_LEDS) break;
     leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = CRGB::Blue;
+    if (z+15 >= NUM_LEDS) break;
     leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = CRGB::Black;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+4 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::White;
+    if (z+9 >= NUM_LEDS) break;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::Blue;
+    if (z+14 >= NUM_LEDS) break;
     leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = CRGB::Black;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+3 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::White;
+    if (z+8 >= NUM_LEDS) break;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::Blue;
+    if (z+13 >= NUM_LEDS) break;
     leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = CRGB::Black;
+    if (z+18 >= NUM_LEDS) break;
     leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = CRGB::Red;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+19] = CRGB::White;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+2 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = CRGB::White;
+    if (z+7 >= NUM_LEDS) break;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::Blue;
+    if (z+12 >= NUM_LEDS) break;
     leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = CRGB::Black;
+    if (z+17 >= NUM_LEDS) break;
     leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = CRGB::Red;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+18] = leds[z+19] = CRGB::White;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+1 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = CRGB::White;
+    if (z+6 >= NUM_LEDS) break;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::Blue;
+    if (z+11 >= NUM_LEDS) break;
     leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = CRGB::Black;
+    if (z+16 >= NUM_LEDS) break;
     leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = CRGB::Red;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+17] = leds[z+18] = leds[z+19] = CRGB::White;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z >= NUM_LEDS) break;
     leds[z] = CRGB::White;
+    if (z+5 >= NUM_LEDS) break;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::Blue;
+    if (z+10 >= NUM_LEDS) break;
     leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = CRGB::Black;
+    if (z+15 >= NUM_LEDS) break;
     leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = CRGB::Red;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::White;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+4 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::Blue;
+    if (z+9 >= NUM_LEDS) break;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::Black;
+    if (z+14 >= NUM_LEDS) break;
     leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = CRGB::Red;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::White;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+3 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::Blue;
+    if (z+8 >= NUM_LEDS) break;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::Black;
+    if (z+13 >= NUM_LEDS) break;
     leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = CRGB::Red;
+    if (z+18 >= NUM_LEDS) break;
     leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = CRGB::White;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+19] = CRGB::Blue;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+2 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = CRGB::Blue;
+    if (z+7 >= NUM_LEDS) break;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::Black;
+    if (z+12 >= NUM_LEDS) break;
     leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = CRGB::Red;
+    if (z+17 >= NUM_LEDS) break;
     leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = CRGB::White;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+18] = leds[z+19] = CRGB::Blue;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+1 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = CRGB::Blue;
+    if (z+6 >= NUM_LEDS) break;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::Black;
+    if (z+11 >= NUM_LEDS) break;
     leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = CRGB::Red;
+    if (z+16 >= NUM_LEDS) break;
     leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = CRGB::White;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Blue;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z >= NUM_LEDS) break;
     leds[z] = CRGB::Blue;
+    if (z+5 >= NUM_LEDS) break;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::Black;
+    if (z+10 >= NUM_LEDS) break;
     leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = CRGB::Red;
+    if (z+15 >= NUM_LEDS) break;
     leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = CRGB::White;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Blue;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+4 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = CRGB::Black;
+    if (z+9 >= NUM_LEDS) break;
     leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = CRGB::Red;
+    if (z+14 >= NUM_LEDS) break;
     leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = CRGB::White;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Blue;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+3 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = leds[z+3] = CRGB::Black;
+    if (z+8 >= NUM_LEDS) break;
     leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = leds[z+8] = CRGB::Red;
+    if (z+13 >= NUM_LEDS) break;
     leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = leds[z+13] = CRGB::White;
+    if (z+18 >= NUM_LEDS) break;
     leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = CRGB::Blue;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+19] = CRGB::Black;
+    if (z+4 >= NUM_LEDS) break;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+2 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = leds[z+2] = CRGB::Black;
+    if (z+7 >= NUM_LEDS) break;
     leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = leds[z+7] = CRGB::Red;
+    if (z+12 >= NUM_LEDS) break;
     leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = leds[z+12] = CRGB::White;
+    if (z+17 >= NUM_LEDS) break;
     leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = leds[z+17] = CRGB::Blue;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z+1 >= NUM_LEDS) break;
     leds[z] = leds[z+1] = CRGB::Black;
+    if (z+6 >= NUM_LEDS) break;
     leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = leds[z+6] = CRGB::Red;
+    if (z+11 >= NUM_LEDS) break;
     leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = leds[z+11] = CRGB::White;
+    if (z+16 >= NUM_LEDS) break;
     leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = leds[z+16] = CRGB::Blue;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
+    if (z >= NUM_LEDS) break;
     leds[z] = CRGB::Black;
+    if (z+5 >= NUM_LEDS) break;
     leds[z+1] = leds[z+2] = leds[z+3] = leds[z+4] = leds[z+5] = CRGB::Red;
+    if (z+10 >= NUM_LEDS) break;
     leds[z+6] = leds[z+7] = leds[z+8] = leds[z+9] = leds[z+10] = CRGB::White;
+    if (z+15 >= NUM_LEDS) break;
     leds[z+11] = leds[z+12] = leds[z+13] = leds[z+14] = leds[z+15] = CRGB::Blue;
+    if (z+19 >= NUM_LEDS) break;
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
@@ -1021,129 +1267,161 @@ void finished() {
 void errorMode() {
   CRGB yellow = CRGB(255, 32, 0);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = yellow;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Red;
   }
   FastLED.show();
   delay(50);
   for(int x=0; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   for(int x=1; x<NUM_LEDS; x+=2) {
+    if (x >= NUM_LEDS) break;
     leds[x] = CRGB::Black;
   }
   FastLED.show();
