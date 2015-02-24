@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <Wire.h>
 
-char charCommand[12];
+char* charCommand;
 char* cmdString;
 char* robotState;
+char* liftString;
 char robotAlliance;
-int liftValue;
+double liftValue;
 int counter = 0;
 int mode;
 
@@ -21,7 +22,9 @@ void setup()
 void loop()
 {
   delay(100);
-  char robotState[] = {charCommand[3], charCommand[4]};
+ if (charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';') && (charCommand[counter] == '>')
+ {
+  char robotState[] = {charCommand[3], charCommand[4], '\0'};
     if (robotState == "SE") // test enabled
     {
       mode = 1;
@@ -65,14 +68,20 @@ void loop()
     
   char robotAlliance = charCommand[1];
   int j;
-  char liftString[] = {charCommand[6], charCommand[7]};
-  liftValue = atoi(liftString);
+  for (j == 0; j++, j < (counter - 6))
+  {
+    char liftString[j] = {charCommand[j+6]};
+  }
+  char liftString[j+1] = '\0';
+  liftValue = atof(liftString);
+  char* liftString;
+ }
 }
 
 
 void receiveEvent(int howMany)
 {
-  while (1 <= Wire.available()) 
+  while (1 <= Wire.available()) && (charCommand[counter] != '>') 
   {
     char incomingChar = Wire.read();
     if (incomingChar == '<')
