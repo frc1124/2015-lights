@@ -22,7 +22,7 @@ void setup()
 void loop()
 {
   delay(100);
- if (charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';') && (charCommand[counter] == '>')
+ if ((charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';') && (charCommand[counter] == '>'))
  {
   char robotState[] = {charCommand[3], charCommand[4], '\0'};
     if (robotState == "SE") // test enabled
@@ -68,20 +68,20 @@ void loop()
     
   char robotAlliance = charCommand[1];
   int j;
-  for (j == 0; j++, j < (counter - 6))
+  for (j = 0; j++; j < (counter - 6))
   {
-    char liftString[j] = {charCommand[j+6]};
+    liftString[j] = {charCommand[j+6]};
   }
-  char liftString[j+1] = '\0';
+  liftString[j+1] = '\0';
   liftValue = atof(liftString);
-  char* liftString;
+  memset(liftString, 0, sizeof liftString);
  }
 }
 
 
 void receiveEvent(int howMany)
 {
-  while (1 <= Wire.available()) && (charCommand[counter] != '>') 
+  while ((1 <= Wire.available()) && (charCommand[counter] != '>')) 
   {
     char incomingChar = Wire.read();
     if (incomingChar == '<')
