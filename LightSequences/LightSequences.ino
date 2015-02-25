@@ -1,4 +1,10 @@
 #include "FastLED.h"
+#include <stdlib.h>
+#include <Wire.h>
+
+char charCommand[32];
+char* robotState;
+int counter = 0;
 
 #define NUM_LEDS 117
 #define DRIVE_LEFT_DATA_PIN 10
@@ -32,7 +38,9 @@ int frame = 24;
 void setup() {
   FastLED.addLeds<NEOPIXEL, DRIVE_LEFT_DATA_PIN>(leds, NUM_DRIVE_LIGHTS);
   FastLED.addLeds<NEOPIXEL, LIFT_LEFT_DATA_PIN>(&leds[NUM_DRIVE_LIGHTS], NUM_LIFT_LIGHTS);
-  Serial.begin(9600);
+  Wire.begin(4);                // join i2c bus with address #4
+  Wire.onReceive(receiveEvent); // register event
+  Serial.begin(9600);           // start serial for output
 }
 
 void testEnabled() {
@@ -1426,6 +1434,145 @@ void errorMode() {
   }
   FastLED.show();
   delay(50);
+}
+
+void setState() {
+  // Make a copy in case more input comes in that moves the counter
+  int c = counter;
+  if (c == 0) return;
+  char *b = (char *)malloc(c);
+  strcpy(b,charCommand);
+  b[c] = 0;
+
+  // Make sure c is long enough to validate
+  if (c<7) {
+    free(b);
+    return;
+  }
+
+  // Validate format
+  int j = 0;
+  if (b[0] != '<') {
+    free(b);
+    return;
+  }
+  if (b[2] != ':') {
+    free(b);
+    return;
+  }
+  if (b[5] != ';') {
+    free(b);
+    return;
+  }
+  if (b[c-1] != '>') {
+    free(b);
+    return;
+  }
+
+  // Get the color
+  allianceColor = b[1];
+  if (allianceColor != 'R' && allianceColor != 'B') {
+    allianceColor = 'X';
+  }
+
+  // Get the state
+  switch (charCommand[3]) {
+  case 'S':
+    switch (charCommand[4]) {
+    case 'E':
+      mode = TEST_ENABLED;
+      break;
+    case 'D':
+      mode = TEST_DISABLED;
+      break;
+    default:
+      free(b);
+      return;
+    }
+    break;
+  case 'A':
+    switch (charCommand[4]) {
+    case 'E':
+      mode = AUTO_ENABLED;
+      break;
+    case 'D':
+      mode = AUTO_DISABLED;
+      break;
+    default:
+      free(b);
+      return;
+    }
+    break;
+  case 'T':
+    switch (charCommand[4]) {
+    case 'E':
+      mode = TELEOP_ENABLED;
+      break;
+    case 'D':
+      mode = TELEOP_DISABLED;
+      break;
+    default:
+      free(b);
+      return;
+    }
+    break;
+  case 'D':
+    if (charCommand[4] == 'C') {
+      mode = DISCONNECTED;
+    } else {
+      free(b);
+      return;
+    }
+    break;
+  case 'F':
+    if (charCommand[4] == 'N') {
+      mode = FINISHED;
+    } else {
+      free(b);
+      return;
+    }
+    break;
+  case 'E':
+    if (charCommand[4] == 'S') {
+      mode = ERROR_MODE;
+    } else {
+      free(b);
+      return;
+    }
+    break;
+  case 'O':
+    if (charCommand[4] == 'F') {
+      mode = OFF;
+    } else {
+      free(b);
+      return;
+    }
+  }
+
+  // Parse the lights
+  char *liftString = (char *)malloc(c-7);
+  strcpy(liftString,&charCommand[6]);
+  liftString[c-8] = 0;
+  liftPosition = atof(liftString);
+}
+
+void receiveEvent(int howMany)
+{
+  while (1 <= Wire.available()) 
+  {
+    char incomingChar = Wire.read();
+    if (incomingChar == '<')
+    {
+      counter = 0;
+    }
+    charCommand[counter] = incomingChar;
+    counter++;
+  }
+  if (counter == 0 || charCommand[counter-1] != '>') {
+    // fail
+    return ;
+  }
+  setState();
 }
 
 void loop() {
