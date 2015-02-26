@@ -7,16 +7,13 @@ char* robotState;
 int counter = 0;
 
 #define NUM_LEDS 117
-#define DRIVE_LEFT_DATA_PIN 10
-#define LIFT_LEFT_DATA_PIN 9
-#define DATA_PIN 5
-#define DATA_PIN 5
-#define CLOCK_PIN 13
+#define DRIVE_DATA_PIN 0
+#define LIFT_DATA_PIN 11
 #define MAX_LIFT 59
 #define NUM_LIFT_LIGHTS 87
 #define NUM_DRIVE_LIGHTS 30
 CRGB leds[NUM_LEDS];
-char allianceColor = 'R';
+char allianceColor = 'B';
 float liftPosition = 59.0;
 int a, b, c, v, w, y, z;
 
@@ -36,8 +33,8 @@ int frame = 24;
 
 
 void setup() {
-  FastLED.addLeds<NEOPIXEL, DRIVE_LEFT_DATA_PIN>(leds, NUM_DRIVE_LIGHTS);
-  FastLED.addLeds<NEOPIXEL, LIFT_LEFT_DATA_PIN>(&leds[NUM_DRIVE_LIGHTS], NUM_LIFT_LIGHTS);
+  FastLED.addLeds<NEOPIXEL, DRIVE_DATA_PIN>(leds, NUM_DRIVE_LIGHTS);
+  FastLED.addLeds<NEOPIXEL, LIFT_DATA_PIN>(&leds[NUM_DRIVE_LIGHTS], NUM_LIFT_LIGHTS);
   Wire.begin(4);                // join i2c bus with address #4
   Wire.onReceive(receiveEvent); // register event
   Serial.begin(9600);           // start serial for output
@@ -131,14 +128,6 @@ void autoDisabled() {
       if (x >= NUM_LEDS) break;
       leds[x] = CRGB::Yellow;
     }
-    for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x<NUM_LEDS; x+=2) {
-      if (x >= NUM_LEDS) break;
-      leds[x] = CRGB::White;
-    }
-    for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS; x+=2) {
-      if (x >= NUM_LEDS) break;
-      leds[x] = CRGB::Yellow;
-    }
   FastLED.show();
   delay(10);
 }
@@ -165,11 +154,6 @@ void autoEnabled() {
     if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
-  leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Red;
-  for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-lightsOn-1; x++) {
-    if (x >= NUM_LEDS) break;
-    leds[x] = CRGB::White;
-  }
   leds[NUM_LEDS-lightsOn-1] = CRGB::Red;
   FastLED.show();
 }
@@ -192,16 +176,11 @@ void teleopEnabled() {
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
-  for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn; x++) {
+  for(int x=NUM_DRIVE_LIGHTS; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn-1; x++) {
     if (x >= NUM_LEDS) break;
     leds[x] = CRGB::White;
   }
-  leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn] = CRGB::Blue;
-  for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-lightsOn-1; x++) {
-    if (x >= NUM_LEDS) break;
-    leds[x] = CRGB::White;
-  }
-  leds[NUM_LEDS-lightsOn-1] = CRGB::Blue;
+  leds[NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn-1] = CRGB::Blue;
   FastLED.show();
 }
 
@@ -212,14 +191,6 @@ void teleopDisabled() {
       leds[x] = CRGB::White;
     }
     for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS; x+=2) {
-    if (x >= NUM_LEDS) break;
-      leds[x] = CRGB::Green;
-    }
-    for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+1; x<NUM_LEDS-1; x+=2) {
-    if (x >= NUM_LEDS) break;
-      leds[x] = CRGB::White;
-    }
-    for(int x=NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS+2; x<NUM_LEDS-1; x+=2) {
     if (x >= NUM_LEDS) break;
       leds[x] = CRGB::Green;
     }
@@ -1437,131 +1408,69 @@ void errorMode() {
 }
 
 void setState() {
-  // Make a copy in case more input comes in that moves the counter
-  int c = counter;
-  if (c == 0) return;
-  char *b = (char *)malloc(c);
-  strcpy(b,charCommand);
-  b[c] = 0;
-
-  // Make sure c is long enough to validate
-  if (c<7) {
-    free(b);
-    return;
-  }
-
-  // Validate format
-  int j = 0;
-  if (b[0] != '<') {
-    free(b);
-    return;
-  }
-  if (b[2] != ':') {
-    free(b);
-    return;
-  }
-  if (b[5] != ';') {
-    free(b);
-    return;
-  }
-  if (b[c-1] != '>') {
-    free(b);
-    return;
-  }
-
-  // Get the color
-  allianceColor = b[1];
-  if (allianceColor != 'R' && allianceColor != 'B') {
-    allianceColor = 'X';
-  }
-
-  // Get the state
-  switch (charCommand[3]) {
-  case 'S':
-    switch (charCommand[4]) {
-    case 'E':
-      mode = TEST_ENABLED;
-      break;
-    case 'D':
-      mode = TEST_DISABLED;
-      break;
-    default:
-      free(b);
-      return;
+ if ((charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';') && (charCommand[counter] == '>'))
+ {
+  char robotState[] = {charCommand[3], charCommand[4], '\0'};
+    if (robotState == "SE") // test enabled
+    {
+      mode = 1;
     }
-    break;
-  case 'A':
-    switch (charCommand[4]) {
-    case 'E':
-      mode = AUTO_ENABLED;
-      break;
-    case 'D':
-      mode = AUTO_DISABLED;
-      break;
-    default:
-      free(b);
-      return;
+    else if (robotState == "SD") // test disabled
+    {
+      mode = 2;
     }
-    break;
-  case 'T':
-    switch (charCommand[4]) {
-    case 'E':
-      mode = TELEOP_ENABLED;
-      break;
-    case 'D':
-      mode = TELEOP_DISABLED;
-      break;
-    default:
-      free(b);
-      return;
+    else if (robotState == "AE") // auto enabled
+    {
+      mode = 3;
     }
-    break;
-  case 'D':
-    if (charCommand[4] == 'C') {
-      mode = DISCONNECTED;
-    } else {
-      free(b);
-      return;
+    else if (robotState == "AD") // auto disabled
+    {
+      mode = 4;
     }
-    break;
-  case 'F':
-    if (charCommand[4] == 'N') {
-      mode = FINISHED;
-    } else {
-      free(b);
-      return;
+    else if (robotState == "TE") // teleop enabled
+    {
+      mode = 5;
     }
-    break;
-  case 'E':
-    if (charCommand[4] == 'S') {
-      mode = ERROR_MODE;
-    } else {
-      free(b);
-      return;
+    else if (robotState == "TD") // teleop disabled
+    {
+      mode = 6;
     }
-    break;
-  case 'O':
-    if (charCommand[4] == 'F') {
-      mode = OFF;
-    } else {
-      free(b);
-      return;
+    else if (robotState == "DC") // disconnected
+    {
+      mode = 7;
     }
+    else if (robotState == "FN") // finished
+    {
+      mode = 8;
+    }
+    else if (robotState == "ES") // error/emergency stop
+    {
+      mode = 9;
+    }
+    else if (robotState == "OF") // lights off
+    {
+      mode = 10;
+    }
+    
+  allianceColor = charCommand[1];
+  char liftString[12];
+  int j;
+  for (j = 0; j++; j < (counter - 6))
+  {
+    liftString[j] = {charCommand[j+6]};
   }
-
-  // Parse the lights
-  char *liftString = (char *)malloc(c-7);
-  strcpy(liftString,&charCommand[6]);
-  liftString[c-8] = 0;
+  liftString[j+1] = '\0';
   liftPosition = atof(liftString);
+  memset(liftString, 0, sizeof liftString);
+ }
 }
 
 void receiveEvent(int howMany)
 {
-  while (1 <= Wire.available()) 
+  while ((1 <= Wire.available()) && (charCommand[counter] != '>')) 
   {
     char incomingChar = Wire.read();
-    if (incomingChar == '<')
+    if (incomingChar == '<' || counter > 31)
     {
       counter = 0;
     }
