@@ -33,11 +33,11 @@ int frame = 24;
 
 
 void setup() {
-  FastLED.addLeds<NEOPIXEL, DRIVE_DATA_PIN>(leds, NUM_DRIVE_LIGHTS);
-  FastLED.addLeds<NEOPIXEL, LIFT_DATA_PIN>(&leds[NUM_DRIVE_LIGHTS], NUM_LIFT_LIGHTS);
   Wire.begin(4);                // join i2c bus with address #4
   Wire.onReceive(receiveEvent); // register event
   Serial.begin(9600);           // start serial for output
+  FastLED.addLeds<NEOPIXEL, DRIVE_DATA_PIN>(leds, NUM_DRIVE_LIGHTS);
+  FastLED.addLeds<NEOPIXEL, LIFT_DATA_PIN>(&leds[NUM_DRIVE_LIGHTS], NUM_LIFT_LIGHTS);
 }
 
 void testEnabled() {
@@ -1474,19 +1474,14 @@ void setState() {
 
 void receiveEvent(int howMany)
 {
-  while ((1 <= Wire.available()) && (charCommand[counter] != '>')) 
+  while (1 < Wire.available()) // loop through all but the last
   {
-    char incomingChar = Wire.read();
-    if (incomingChar == '<' || counter > 31)
+    char c = Wire.read(); // receive byte as a character
+    if (c == '<' || counter > 31)
     {
       counter = 0;
     }
-    charCommand[counter] = incomingChar;
-    counter++;
-  }
-  if (counter == 0 || charCommand[counter-1] != '>') {
-    // fail
-    return ;
+    charCommand[counter++] = c;
   }
   setState();
 }
