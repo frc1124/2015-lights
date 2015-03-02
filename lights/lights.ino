@@ -214,6 +214,7 @@ void teleopDisabled() {
 }
 
 void disconnected2() {
+  // Define the basic light pattern
   CRGB pattern[12];
   pattern[0] = pattern[1] = pattern[2] = teamRed;
   pattern[3] = CRGB::Black;
@@ -222,15 +223,24 @@ void disconnected2() {
   pattern[8] = pattern[9] = pattern[10] = teamBlue;
   pattern[11] = CRGB::Black;
 
+  // Cycle through the starting point on the pattern
+  // This creates the full cycle of "moving" lights
   for (int start=0;start<12;start++) {
+    // Fill in the lights for the drive
     for (int x=0;x<NUM_DRIVE_LIGHTS;x++) {
+      // Find the current pattern color using both starting pattern offset and the current LED
       int y = (start+x)%12;
       leds[x] = pattern[y];
     }
+
+    // Fill in the lights for the lift
     for (int x=NUM_LEDS-1;x>=NUM_DRIVE_LIGHTS;x--) {
-      int y = (start+x)%12;
+      // Find the current pattern color using both starting pattern offset and the current LED
+      int y = 11-((start+x)%12);
       leds[x] = pattern[y];
     }
+
+    // Show the lights
     FastLED.show();
     delay(50);
   }
