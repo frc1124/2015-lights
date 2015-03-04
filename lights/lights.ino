@@ -53,40 +53,29 @@ void setup() {
 }
 
 void testEnabled() {
+  //Drive: solid orange, Lift: white up to lift position with top-most light orange
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    leds[x] = orange;
+    leds[x] = orange; //set drive lights orange
   }
+  //find number of lights needed to light up to lift position
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_LEDS-lightsOn;
   for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = white;
+    leds[x] = white; //set lights white up to there
   }
   for(int x=topOffset; x<NUM_LEDS; x++) {
-    leds[x] = CRGB::Black;
+    leds[x] = CRGB::Black; //reset all lights above that to black
   }
-  leds[NUM_LEDS-1] = orange;
+  leds[NUM_LEDS-1] = orange; //set top-most light to orange
   FastLED.show();
 }
 
 void testDisabled() {
-  if (frame > 220) c = 1;
-  if (frame < 25) c = 0;
-  for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
-    switch (c) {
-      case 0:
-        frame = frame + 1;
-        break;
-      case 1:
-        frame = frame - 1;
-        break;
-      default:
-        frame++;
-      break;
-    }
-      leds[x] = CRGB(frame, frame, 0);
-  }
+  //Drive: yellow pulse, Lift: White up to lift position with top-most light orange
+  pulseDriveTrain(2);
+  //find number of lights needed to light up to lift position
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn =  NUM_LIFT_LIGHTS - lights;
@@ -95,56 +84,69 @@ void testDisabled() {
     leds[x] = white;
   }
   for(int x=topOffset; x<NUM_LEDS; x++) {
-    leds[x] = CRGB::Black;
+    leds[x] = CRGB::Black; //set all lights above off
   }
-  leds[NUM_LEDS-1] = orange;
+  leds[NUM_LEDS-1] = orange; //set top-most light to orange
   FastLED.show();
   delay(50);
 }
 
-void pulseDriveTrain() {
-  if (frame > 220) c = 1;
-  if (frame < 25) c = 0;
+void pulseDriveTrain(byte driveColor) {
+  //Change parameters of function to take a char so testDisabled can also use it
+  if (frame > 220) c = 1; //if brightness is too high, make it step down
+  if (frame < 25) c = 0; //if brightness is too low, make it step up
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (c) {
       case 0:
-        frame = frame + 1;
+        frame = frame + 1; //step up
         break;
       case 1:
-        frame = frame - 1;
+        frame = frame - 1; //step down
         break;
       default:
-        frame++;
+        frame++; //just go up because we don't know what to do
+        //Change to frame = 0
       break;
     }
-    switch (allianceColor) {
-    case 'B':
+    //check allianceColor to set drive train to pulse in the right color
+    //Change this so it pulse whatever char color the parameter gets
+    switch (driveColor) {
+    case 0:
       leds[x] = CRGB(0, 0, frame);
       break;
-    case 'R':
+    case 1:
       leds[x] = CRGB(frame, 0, 0);
       break;
+    case 2:
+      leds[x] = CRGB(frame, frame, 0);
+      break;
     default:
-      leds[x] = CRGB::Black;
+      leds[x] = CRGB::Black; //if things break, just turn them off
       break;
     }
   }
 }
 
 void autoDisabled() {
-  pulseDriveTrain();
+  //Drive: alliance color pulse, Lift: white and yellow alternating
+  if (allianceColor == 'B') pulseDriveTrain(0);
+  if (allianceColor == 'R') pulseDriveTrain(1);
+  //set every other lift light to white
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_LEDS; x+=2) {
       leds[x] = white;
-    }
-    for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_LEDS; x+=2) {
+  }
+  //set other lift lights to yellow
+  for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_LEDS; x+=2) {
       leds[x] = yellow;
-    }
-  leds[NUM_LEDS-1] = red;
+  }
+  leds[NUM_LEDS-1] = red; //set top light to red???
   FastLED.show();
-  delay(10);
+  delay(10); //delay pulse to create breathing effect
 }
 
 void autoEnabled() {
+  //Drive: alliance color, Lift: white with top-most red
+  //set drive train color
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (allianceColor) {
     case 'B':
@@ -154,25 +156,29 @@ void autoEnabled() {
       leds[x] = red;
       break;
     default:
-      leds[x] = CRGB::Black;
+      leds[x] = CRGB::Black; //off means something broke
       break;
     }
   }
+  //find number of lights needed to light up to lift position
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
+  //set lights up to that point to white
   for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
     leds[x] = white;
   }
+  //reset all others to black
   for(int x=topOffset; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black;
   }
-  leds[NUM_LEDS-1] = red;
+  leds[NUM_LEDS-1] = red; //set top-most light to red
   FastLED.show();
 }
 
 void teleopEnabled() {
+  //Drive: alliance color, Lift: white on lift up to lift position with top-most blue
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (allianceColor) {
     case 'B':
@@ -182,10 +188,11 @@ void teleopEnabled() {
       leds[x] = red;
       break;
     default:
-      leds[x] = CRGB::Black;
+      leds[x] = CRGB::Black; //turn off things when they break
       break;
     }
   }
+  //find number of lights needed to light up to lift position
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
@@ -193,24 +200,29 @@ void teleopEnabled() {
   for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
     leds[x] = white;
   }
+  //reset all others to black
   for(int x=topOffset; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black;
   }
-  leds[NUM_LEDS-1] = blue;
+  leds[NUM_LEDS-1] = blue; //set top-most light to blue
   FastLED.show();
 }
 
 void teleopDisabled() {
-  pulseDriveTrain();
+  //Drive: alliance color pulse, Lift: white and green alternating
+  if (allianceColor == 'B') pulseDriveTrain(0);
+  if (allianceColor == 'R') pulseDriveTrain(1);
+  //set every other lift light to white
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_LEDS; x+=2) {
       leds[x] = white;
     }
-    for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_LEDS; x+=2) {
+  //set other lights to green
+  for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_LEDS; x+=2) {
       leds[x] = green;
-    }
-  leds[NUM_LEDS-1] = blue;
+  }
+  leds[NUM_LEDS-1] = blue; //set top-most light to blue
   FastLED.show();
-  delay(100);
+  delay(100); //delay pulse to create breathing effect
 }
 
 void disconnected2() {
@@ -246,7 +258,8 @@ void disconnected2() {
   }
 }
 
-void disconnected() { 
+void disconnected() {
+  //warning: this function is at this point kinda pointless because of disconnected2
   // Turn the LED on, then pause
   for (int i=0;i<NUM_LEDS-10;i+=12) {
     if (i >= NUM_LEDS) break;
@@ -258,7 +271,7 @@ void disconnected() {
     if (i+3 >= NUM_LEDS) break;
     leds[i+3] = CRGB::Black;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = teamGold; //teamRed
+    leds[i+4] = teamGold;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = teamGold;
     if (i+6 >= NUM_LEDS) break;
@@ -266,7 +279,7 @@ void disconnected() {
     if (i+7 >= NUM_LEDS) break;
     leds[i+7] = CRGB::Black;
     if (i+8 >= NUM_LEDS) break;
-    leds[i+8] = teamRed; //teamBlue
+    leds[i+8] = teamRed;
     if (i+9 >= NUM_LEDS) break;
     leds[i+9] = teamRed;
     if (i+10 >= NUM_LEDS) break;
@@ -287,7 +300,7 @@ void disconnected() {
     if (i+3 >= NUM_LEDS) break;
     leds[i+3] = teamGold;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = teamGold; //teamRed
+    leds[i+4] = teamGold;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = teamGold;
     if (i+6 >= NUM_LEDS) break;
@@ -295,7 +308,7 @@ void disconnected() {
     if (i+7 >= NUM_LEDS) break;
     leds[i+7] = teamRed;
     if (i+8 >= NUM_LEDS) break;
-    leds[i+8] = teamRed; //teamBlue
+    leds[i+8] = teamRed;
     if (i+9 >= NUM_LEDS) break;
     leds[i+9] = teamRed;
     if (i+10 >= NUM_LEDS) break;
@@ -316,7 +329,7 @@ void disconnected() {
     if (i+3 >= NUM_LEDS) break;
     leds[i+3] = teamGold;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = teamGold; //teamRed
+    leds[i+4] = teamGold;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = CRGB::Black;
     if (i+6 >= NUM_LEDS) break;
@@ -324,7 +337,7 @@ void disconnected() {
     if (i+7 >= NUM_LEDS) break;
     leds[i+7] = teamRed;
     if (i+8 >= NUM_LEDS) break;
-    leds[i+8] = teamRed; //teamBlue
+    leds[i+8] = teamRed;
     if (i+9 >= NUM_LEDS) break;
     leds[i+9] = CRGB::Black;
     if (i+10 >= NUM_LEDS) break;
@@ -345,7 +358,7 @@ void disconnected() {
     if (i+3 >= NUM_LEDS) break;
     leds[i+3] = teamGold;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = CRGB::Black; //teamRed
+    leds[i+4] = CRGB::Black;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = teamRed;
     if (i+6 >= NUM_LEDS) break;
@@ -353,7 +366,7 @@ void disconnected() {
     if (i+7 >= NUM_LEDS) break;
     leds[i+7] = teamRed;
     if (i+8 >= NUM_LEDS) break;
-    leds[i+8] = CRGB::Black; //teamBlue
+    leds[i+8] = CRGB::Black;
     if (i+9 >= NUM_LEDS) break;
     leds[i+9] = teamBlue;
     if (i+10 >= NUM_LEDS) break;
@@ -374,7 +387,7 @@ void disconnected() {
     if (i+3 >= NUM_LEDS) break;
     leds[i+3] = CRGB::Black;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = teamRed; //teamRed
+    leds[i+4] = teamRed;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = teamRed;
     if (i+6 >= NUM_LEDS) break;
@@ -382,7 +395,7 @@ void disconnected() {
     if (i+7 >= NUM_LEDS) break;
     leds[i+7] = CRGB::Black;
     if (i+8 >= NUM_LEDS) break;
-    leds[i+8] = teamBlue; //teamBlue
+    leds[i+8] = teamBlue;
     if (i+9 >= NUM_LEDS) break;
     leds[i+9] = teamBlue;
     if (i+10 >= NUM_LEDS) break;
@@ -404,11 +417,11 @@ void disconnected() {
     if (i+3 >= NUM_LEDS) break;
     leds[i+3] = teamRed;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = teamRed; //teamRed
+    leds[i+4] = teamRed;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = teamRed;
     if (i+6 >= NUM_LEDS) break;
-    leds[i+6] = CRGB::Black; //teamBlue
+    leds[i+6] = CRGB::Black;
     if (i+7 >= NUM_LEDS) break;
     leds[i+7] = teamBlue;
     if (i+8 >= NUM_LEDS) break;
@@ -431,9 +444,9 @@ void disconnected() {
     if (i+2 >= NUM_LEDS) break;
     leds[i+2] = teamRed;
     if (i+3 >= NUM_LEDS) break;
-    leds[i+3] = teamRed; //teamRed
+    leds[i+3] = teamRed;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = teamRed; //teamBlue
+    leds[i+4] = teamRed;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = CRGB::Black;
     if (i+6 >= NUM_LEDS) break;
@@ -460,9 +473,9 @@ void disconnected() {
     if (i+2 >= NUM_LEDS) break;
     leds[i+2] = teamRed;
     if (i+3 >= NUM_LEDS) break;
-    leds[i+3] = teamRed; //teamRed
+    leds[i+3] = teamRed;
     if (i+4 >= NUM_LEDS) break;
-    leds[i+4] = CRGB::Black; //teamBlue
+    leds[i+4] = CRGB::Black;
     if (i+5 >= NUM_LEDS) break;
     leds[i+5] = teamBlue;
     if (i+6 >= NUM_LEDS) break;
@@ -606,8 +619,8 @@ void finished() {
   switch (a) {
     case 0:
       //Hi, Fischler
-      b = 19;
-      on(75);
+      b = 19; //set red white blue chase time
+      on(75); //H
       off(75);
       on(75);
       off(75);
@@ -617,13 +630,13 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
       
-      on(75);
+      on(75); //i
       off(75);
       on(75);
       off(300);
       if (mode != FINISHED) return;
       
-      on(300);
+      on(300); //,
       off(75);
       on(300);
       off(75);
@@ -634,34 +647,10 @@ void finished() {
       on(300);
       off(75);
       on(300);
-      off(500);
+      off(500); //
       if (mode != FINISHED) return;
       
-      on(75);
-      off(75);
-      on(75);
-      off(75);
-      on(300);
-      off(75);
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-      
-      on(75);
-      off(75);
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-      
-      on(75);
-      off(75);
-      on(75);
-      off(75);
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-      
-      on(300);
+      on(75); //F
       off(75);
       on(75);
       off(75);
@@ -671,7 +660,31 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
       
+      on(75); //i
+      off(75);
       on(75);
+      off(300);
+      if (mode != FINISHED) return;
+      
+      on(75); //s
+      off(75);
+      on(75);
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+      
+      on(300); //c
+      off(75);
+      on(75);
+      off(75);
+      on(300);
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+      
+      on(75); //h
       off(75);
       on(75);
       off(75);
@@ -681,7 +694,7 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
       
-      on(75);
+      on(75); //l
       off(75);
       on(300);
       off(75);
@@ -691,22 +704,22 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
       
-      on(75);
+      on(75); //e
       off(300);
       if (mode != FINISHED) return;
       
-      on(75);
+      on(75); //r
       off(75);
       on(300);
       off(75);
       on(75);
-      off(500);
+      off(500); //
       if (mode != FINISHED) return;
       break;
     case 1:
       //Ubernerds
-      b = 22;
-      on(75);
+      b = 22; //set red white blue chase time
+      on(75); //U
       off(75);
       on(75);
       off(75);
@@ -714,7 +727,7 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
   
-      on(300);
+      on(300); //b
       off(75);
       on(75);
       off(75);
@@ -724,11 +737,11 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
   
-      on(75);
+      on(75); //e
       off(300);
       if (mode != FINISHED) return;
   
-      on(75);
+      on(75); //r
       off(75);
       on(300);
       off(75);
@@ -736,25 +749,25 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
       
+      on(300); //n
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //e
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //r
+      off(75);
       on(300);
       off(75);
       on(75);
       off(300);
       if (mode != FINISHED) return;
   
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-  
-      on(75);
-      off(75);
-      on(300);
-      off(75);
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-  
-      on(300);
+      on(300); //d
       off(75);
       on(75);
       off(75);
@@ -762,18 +775,18 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
   
-      on(75);
+      on(75); //s
       off(75);
       on(75);
       off(75);
       on(75);
-      off(500);
+      off(500); //
       if (mode != FINISHED) return;
       break;
     case 2:
       //Uberbots
-      b = 22;
-      on(75);
+      b = 22; //set red white blue chase time
+      on(75); //U
       off(75);
       on(75);
       off(75);
@@ -781,29 +794,7 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
   
-      on(300);
-      off(75);
-      on(75);
-      off(75);
-      on(75);
-      off(75);
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-  
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-  
-      on(75);
-      off(75);
-      on(300);
-      off(75);
-      on(75);
-      off(300);
-      if (mode != FINISHED) return;
-  
-      on(300);
+      on(300); //b
       off(75);
       on(75);
       off(75);
@@ -813,7 +804,29 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
   
+      on(75); //e
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //r
+      off(75);
       on(300);
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(300); //b
+      off(75);
+      on(75);
+      off(75);
+      on(75);
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(300); //o
       off(75);
       on(300);
       off(75);
@@ -821,148 +834,150 @@ void finished() {
       off(300);
       if (mode != FINISHED) return;
   
-      on(300); 
+      on(300); //t
       off(300);
       if (mode != FINISHED) return;
   
-      on(75);
+      on(75); //s
       off(75);
       on(75);
       off(75);
       on(75);
-      off(500);
+      off(500); //
       if (mode != FINISHED) return;
       break;
     case 3:
       //Niezreicki's rule
-      b = 16;
+      b = 16; //set red white blue chase time
+      on(300); //N
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //i
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //e
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(300); //z
+      off(75);
+      on(300);
+      off(75);
+      on(75);
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //r
+      off(75);
       on(300);
       off(75);
       on(75);
       off(300);
       if (mode != FINISHED) return;
   
-      on(75);
+      on(75); //e
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //i
       off(75);
       on(75);
       off(300);
       if (mode != FINISHED) return;
   
+      on(300); //c
+      off(75);
+      on(75);
+      off(75);
+      on(300);
+      off(75);
       on(75);
       off(300);
       if (mode != FINISHED) return;
   
+      on(300); //k
+      off(75);
+      on(75);
+      off(75);
+      on(300);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //i
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //'
+      off(75);
+      on(300);
+      off(75);
+      on(300);
+      off(75);
       on(300);
       off(75);
       on(300);
       off(75);
       on(75);
+      off(300);
+      if (mode != FINISHED) return;
+  
+      on(75); //s
+      off(75);
+      on(75);
+      off(75);
+      on(75);
+      off(500); //
+      if (mode != FINISHED) return;
+  
+      on(75); //r
+      off(75);
+      on(300);
       off(75);
       on(75);
       off(300);
       if (mode != FINISHED) return;
   
-  on(75);
-  off(75);
-  on(300);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
+      on(75); //u
+      off(75);
+      on(75);
+      off(75);
+      on(300);
+      off(300);
+      if (mode != FINISHED) return;
   
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
+      on(75); //l
+      off(75);
+      on(300);
+      off(75);
+      on(75);
+      off(75);
+      on(75);
+      off(300);
+      if (mode != FINISHED) return;
   
-  on(75);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(300);
-  off(75);
-  on(75);
-  off(75);
-  on(300);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(300);
-  off(75);
-  on(75);
-  off(75);
-  on(300);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(75);
-  on(300);
-  off(75);
-  on(300);
-  off(75);
-  on(300);
-  off(75);
-  on(300);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(75);
-  on(75);
-  off(75);
-  on(75);
-  off(500);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(75);
-  on(300);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(75);
-  on(75);
-  off(75);
-  on(300);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(75);
-  on(300);
-  off(75);
-  on(75);
-  off(75);
-  on(75);
-  off(300);
-  if (mode != FINISHED) return;
-  
-  on(75);
-  off(500);
-  if (mode != FINISHED) return;
+      on(75); //e
+      off(500); //
+      if (mode != FINISHED) return;
       break;
     default:
-    b = 30;
+    b = 30; //set red white blue chase time
       for (int x=0; x<NUM_LEDS; x++) {
           leds[x] = CRGB::Black;
       }
       break;
   }
+  //Fix red white blue chase to take up less space
+  //As in fewer for loops would be nice
   for (int x=0; x<b; x++) {
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+4 >= NUM_LEDS) break;
@@ -1261,7 +1276,10 @@ void finished() {
 }
 
 void errorMode() {
+  //To test, press space bar at driver's station
   CRGB errorYellow = CRGB(255, 32, 0);
+  //Also make this take up less code
+  //Pattern arrays, yay!
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1393,7 +1411,7 @@ void errorMode() {
 }
 
 void setState() {
- if ((charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';'))
+ if ((charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';')) //try  && (charCommand[counter-1] == '>')
  {
   char robotState[] = {charCommand[3], charCommand[4], '\0'};
     if (robotState == "SE") // test enabled
