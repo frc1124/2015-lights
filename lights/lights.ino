@@ -1,9 +1,9 @@
 #include "FastLED.h"
 #include <stdlib.h>
 #include <Wire.h>
+#include <elapsedMillis.h>
 
 char charCommand[32];
-char* robotState;
 int counter = 0;
 
 #define NUM_LEDS 117
@@ -28,6 +28,7 @@ CRGB green = CRGB(0, 96, 0);
 CRGB teamBlue  = CRGB(13, 91, 223);
 CRGB teamGold = CRGB(215, 180, 36);
 CRGB teamRed = CRGB(128, 3, 5);
+CRGB gray = CRGB(50, 50, 50);
 
 #define TEST_ENABLED 1
 #define TEST_DISABLED 2
@@ -53,42 +54,51 @@ void setup() {
 }
 
 void testEnabled() {
+  elapsedMillis timeElapsed = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     leds[x] = orange; //set drive lights orange
   }
   //find number of lights needed to light up to lift position
+  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
+  if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_LEDS-lightsOn;
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = white; //set lights white up to there
+  for(int x=NUM_DRIVE_LIGHTS; x<topOffset-1; x++) {
+    leds[x] = gray; //set lights white up to there
   }
-  for(int x=topOffset; x<NUM_LEDS; x++) {
+  for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black; //reset all lights above that to black
   }
-  leds[NUM_LEDS-1] = orange; //set top-most light to orange
+  leds[topOffset-1] = orange; //set top-most light to orange
   FastLED.show();
 }
 
 void testDisabled() {
+  elapsedMillis timeElapsed = 0;
   //find number of lights needed to light up to lift position
+  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
+  if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn =  NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_LEDS-lightsOn;
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
+  for(int x=NUM_DRIVE_LIGHTS; x<topOffset-1; x++) {
     leds[x] = white;
   }
-  for(int x=topOffset; x<NUM_LEDS; x++) {
+  for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black; //set all lights above off
   }
-  leds[NUM_LEDS-1] = orange; //set top-most light to orange
+  leds[topOffset-1] = orange; //set top-most light to orange
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 101) {
+  }
+  timeElapsed = 0;
 }
 
 void pulseDriveTrain(byte driveColor) {
+  elapsedMillis timeElapsed = 0;
   //Change parameters of function to take a char so testDisabled can also use it
   if (frame > 220) c = 1; //if brightness is too high, make it step down
   if (frame < 25) c = 0; //if brightness is too low, make it step up
@@ -125,6 +135,7 @@ void pulseDriveTrain(byte driveColor) {
 }
 
 void autoDisabled() {
+  elapsedMillis timeElapsed = 0;
   //set every other lift light to white
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_LEDS; x+=2) {
       leds[x] = white;
@@ -135,10 +146,13 @@ void autoDisabled() {
   }
   leds[NUM_LEDS-1] = red; //set top light to red???
   FastLED.show();
-  delay(10); //delay pulse to create breathing effect
+  while(timeElapsed < 151) { //delay pulse to create breathing effect
+  }
+  timeElapsed = 0;
 }
 
 void autoEnabled() {
+  elapsedMillis timeElapsed = 0; 
   //set drive train color
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (allianceColor) {
@@ -154,23 +168,26 @@ void autoEnabled() {
     }
   }
   //find number of lights needed to light up to lift position
+  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
+  if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
   //set lights up to that point to white
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = white;
+  for(int x=NUM_DRIVE_LIGHTS; x<topOffset-1; x++) {
+    leds[x] = yellow;
   }
   //reset all others to black
-  for(int x=topOffset; x<NUM_LEDS; x++) {
+  for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black;
   }
-  leds[NUM_LEDS-1] = red; //set top-most light to red
+  leds[topOffset-1] = red; //set top-most light to red
   FastLED.show();
 }
 
 void teleopEnabled() {
+  elapsedMillis timeElapsed = 0;
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (allianceColor) {
     case 'B':
@@ -185,25 +202,28 @@ void teleopEnabled() {
     }
   }
   //find number of lights needed to light up to lift position
+  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
+  if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = white;
+  for(int x=NUM_DRIVE_LIGHTS; x<topOffset-1; x++) {
+    leds[x] = gray;
   }
   //reset all others to black
-  for(int x=topOffset; x<NUM_LEDS; x++) {
+  for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black;
   }
-  leds[NUM_LEDS-1] = blue; //set top-most light to blue
+  leds[topOffset-1] = blue; //set top-most light to blue
   FastLED.show();
 }
 
 void teleopDisabled() {
+  elapsedMillis timeElapsed = 0;
   //set every other lift light to white
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_LEDS; x+=2) {
-      leds[x] = white;
+      leds[x] = green;
     }
   //set other lights to green
   for(int x=NUM_DRIVE_LIGHTS+1; x<NUM_LEDS; x+=2) {
@@ -211,10 +231,13 @@ void teleopDisabled() {
   }
   leds[NUM_LEDS-1] = blue; //set top-most light to blue
   FastLED.show();
-  delay(100); //delay pulse to create breathing effect
+  while(timeElapsed < 151){ //delay pulse to create breathing effect
+  }
+  timeElapsed = 0;
 }
 
 void disconnected2() {
+  elapsedMillis timeElapsed = 0;
   // Define the basic light pattern
   CRGB pattern[12];
   pattern[0] = pattern[1] = pattern[2] = teamRed;
@@ -243,11 +266,14 @@ void disconnected2() {
 
     // Show the lights
     FastLED.show();
-    delay(50);
+    while(timeElapsed < 51){
+    }
+  timeElapsed = 0;
   }
 }
 
 void disconnected() {
+  elapsedMillis timeElapsed = 0;
   //warning: this function is at this point kinda pointless because of disconnected2
   // Turn the LED on, then pause
   for (int i=0;i<NUM_LEDS-10;i+=12) {
@@ -278,7 +304,9 @@ void disconnected() {
   }
   FastLED.show();
   if (mode != DISCONNECTED) return;
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
     if (i >= NUM_LEDS) break;
     leds[i] = teamBlue;
@@ -306,7 +334,9 @@ void disconnected() {
     leds[i+11] = teamBlue;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
     if (i >= NUM_LEDS) break;
@@ -335,7 +365,9 @@ void disconnected() {
     leds[i+11] = teamBlue;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
     if (i >= NUM_LEDS) break;
@@ -364,7 +396,9 @@ void disconnected() {
     leds[i+11] = teamBlue;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0;i<NUM_LEDS-10;i+=12) {
     if (i >= NUM_LEDS) break;
@@ -393,7 +427,9 @@ void disconnected() {
     leds[i+11] = CRGB::Black;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   // Now turn the LED off, then pause
   for (int i=0;i<NUM_LEDS-10;i+=12) {
@@ -423,7 +459,9 @@ void disconnected() {
     leds[i+11] = teamGold;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
     if (i >= NUM_LEDS) break;
@@ -452,7 +490,9 @@ void disconnected() {
     leds[i+11] = teamGold;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
     if (i >= NUM_LEDS) break;
@@ -481,7 +521,9 @@ void disconnected() {
     leds[i+11] = teamGold;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
     if (i+2 >= NUM_LEDS) break;
@@ -498,7 +540,9 @@ void disconnected() {
     leds[i+11] = CRGB::Black;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
     if (i+1 >= NUM_LEDS) break;
@@ -517,7 +561,9 @@ void disconnected() {
     leds[i+11] = teamRed;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
     if (i >= NUM_LEDS) break;
@@ -536,7 +582,9 @@ void disconnected() {
     leds[i+10] = leds[i+11] = teamRed;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
   for (int i=0; i<NUM_LEDS-10; i+=12) {
     if (i >= NUM_LEDS) break;
@@ -565,11 +613,14 @@ void disconnected() {
     leds[i+11] = teamRed;
   }
   FastLED.show();
-  delay(75);
+  while(timeElapsed < 76){
+  }
+  timeElapsed = 0;
   if (mode != DISCONNECTED) return;
 }
 
 void on(int t) {
+  elapsedMillis timeElapsed = 0;
   for (int z=0; z<20; z++) {
   y = random(NUM_LEDS-3);
   for(int x=y; x<y+3; x++) {
@@ -592,18 +643,24 @@ void on(int t) {
   }
   }
   FastLED.show();
-  delay(t);
+  while(timeElapsed < t+1){
+  }
+  timeElapsed = 0;
 }
 
 void off(int t) {
+  elapsedMillis timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x++) {
     leds[x]= CRGB::Black;
   }
   FastLED.show();
-  delay(t);
+  while(timeElapsed < t+1){
+  }
+  timeElapsed = 0;
 }
 
 void finished() {
+  elapsedMillis timeElapsed = 0;
   a = random(4);
   switch (a) {
     case 0:
@@ -979,7 +1036,9 @@ void finished() {
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+3 >= NUM_LEDS) break;
@@ -994,7 +1053,9 @@ void finished() {
     leds[z+19] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+2 >= NUM_LEDS) break;
@@ -1009,7 +1070,9 @@ void finished() {
     leds[z+18] = leds[z+19] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+1 >= NUM_LEDS) break;
@@ -1024,7 +1087,9 @@ void finished() {
     leds[z+17] = leds[z+18] = leds[z+19] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z >= NUM_LEDS) break;
@@ -1039,7 +1104,9 @@ void finished() {
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+4 >= NUM_LEDS) break;
@@ -1052,7 +1119,9 @@ void finished() {
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+3 >= NUM_LEDS) break;
@@ -1067,7 +1136,9 @@ void finished() {
     leds[z+19] = white;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+2 >= NUM_LEDS) break;
@@ -1082,7 +1153,9 @@ void finished() {
     leds[z+18] = leds[z+19] = white;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+1 >= NUM_LEDS) break;
@@ -1097,7 +1170,9 @@ void finished() {
     leds[z+17] = leds[z+18] = leds[z+19] = white;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z >= NUM_LEDS) break;
@@ -1112,7 +1187,9 @@ void finished() {
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = white;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+4 >= NUM_LEDS) break;
@@ -1125,7 +1202,9 @@ void finished() {
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = white;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+3 >= NUM_LEDS) break;
@@ -1140,7 +1219,9 @@ void finished() {
     leds[z+19] = blue;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+2 >= NUM_LEDS) break;
@@ -1155,7 +1236,9 @@ void finished() {
     leds[z+18] = leds[z+19] = blue;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+1 >= NUM_LEDS) break;
@@ -1170,7 +1253,9 @@ void finished() {
     leds[z+17] = leds[z+18] = leds[z+19] = blue;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z >= NUM_LEDS) break;
@@ -1185,7 +1270,9 @@ void finished() {
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = blue;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+4 >= NUM_LEDS) break;
@@ -1198,7 +1285,9 @@ void finished() {
     leds[z+15] = leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = blue;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+3 >= NUM_LEDS) break;
@@ -1214,7 +1303,9 @@ void finished() {
     if (z+4 >= NUM_LEDS) break;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+2 >= NUM_LEDS) break;
@@ -1229,7 +1320,9 @@ void finished() {
     leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z+1 >= NUM_LEDS) break;
@@ -1244,7 +1337,9 @@ void finished() {
     leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
   for(int z=0; z<NUM_LEDS-20; z+=20) {
     if (z >= NUM_LEDS) break;
@@ -1259,12 +1354,15 @@ void finished() {
     leds[z+16] = leds[z+17] = leds[z+18] = leds[z+19] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   if (mode != FINISHED) return;
  }
 }
 
 void errorMode() {
+  elapsedMillis timeElapsed = 0;
   //To test, press space bar at driver's station
   CRGB errorYellow = CRGB(255, 32, 0);
   //Also make this take up less code
@@ -1276,7 +1374,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1284,7 +1384,9 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1292,7 +1394,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1300,7 +1404,9 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1308,7 +1414,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1316,7 +1424,9 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1324,7 +1434,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = errorYellow;
   }
@@ -1332,7 +1444,9 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = CRGB::Black;
   }
@@ -1340,7 +1454,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = CRGB::Black;
   }
@@ -1348,23 +1464,9 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
-  for(int x=0; x<NUM_LEDS; x+=2) {
-    leds[x] = CRGB::Black;
+  while(timeElapsed < 51){
   }
-  for(int x=1; x<NUM_LEDS; x+=2) {
-    leds[x] = red;
-  }
-  FastLED.show();
-  delay(50);
-  for(int x=0; x<NUM_LEDS; x+=2) {
-    leds[x] = CRGB::Black;
-  }
-  for(int x=1; x<NUM_LEDS; x+=2) {
-    leds[x] = CRGB::Black;
-  }
-  FastLED.show();
-  delay(50);
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = CRGB::Black;
   }
@@ -1372,7 +1474,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = CRGB::Black;
   }
@@ -1380,7 +1484,9 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = CRGB::Black;
   }
@@ -1388,7 +1494,9 @@ void errorMode() {
     leds[x] = red;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
   for(int x=0; x<NUM_LEDS; x+=2) {
     leds[x] = CRGB::Black;
   }
@@ -1396,50 +1504,72 @@ void errorMode() {
     leds[x] = CRGB::Black;
   }
   FastLED.show();
-  delay(50);
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
+  for(int x=0; x<NUM_LEDS; x+=2) {
+    leds[x] = CRGB::Black;
+  }
+  for(int x=1; x<NUM_LEDS; x+=2) {
+    leds[x] = red;
+  }
+  FastLED.show();
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
+  for(int x=0; x<NUM_LEDS; x+=2) {
+    leds[x] = CRGB::Black;
+  }
+  for(int x=1; x<NUM_LEDS; x+=2) {
+    leds[x] = CRGB::Black;
+  }
+  FastLED.show();
+  while(timeElapsed < 51){
+  }
+  timeElapsed = 0;
 }
 
 void setState() {
  if ((charCommand[0] == '<') && (charCommand[2] == ':') && (charCommand[5] == ';')) //try  && (charCommand[counter-1] == '>')
  {
-  char robotState[] = {charCommand[3], charCommand[4], '\0'};
-    if (robotState == "SE") // test enabled
+  char robotState[] = {charCommand[3], charCommand[4]};
+    if (robotState[0] == 'S' && robotState[1] == 'E') // test enabled
     {
       mode = 1;
     }
-    else if (robotState == "SD") // test disabled
+    else if (robotState[0] == 'S' && robotState[1] == 'D') // test disabled
     {
       mode = 2;
     }
-    else if (robotState == "AE") // auto enabled
+    else if (robotState[0] == 'A' && robotState[1] == 'E') // auto enabled
     {
       mode = 3;
     }
-    else if (robotState == "AD") // auto disabled
+    else if (robotState[0] == 'A' && robotState[1] == 'D') // auto disabled
     {
       mode = 4;
     }
-    else if (robotState == "TE") // teleop enabled
+    else if (robotState[0] == 'T' && robotState[1] == 'E') // teleop enabled
     {
       mode = 5;
     }
-    else if (robotState == "TD") // teleop disabled
+    else if (robotState[0] == 'T' && robotState[1] == 'D') // teleop disabled
     {
       mode = 6;
     }
-    else if (robotState == "DC") // disconnected
+    else if (robotState[0] == 'D' && robotState[1] == 'C') // disconnected
     {
       mode = 7;
     }
-    else if (robotState == "FN") // finished
+    else if (robotState[0] == 'F' && robotState[1] == 'N') // finished
     {
       mode = 8;
     }
-    else if (robotState == "ES") // error/emergency stop
+    else if (robotState[0] == 'E' && robotState[1] == 'S') // error/emergency stop
     {
       mode = 9;
     }
-    else if (robotState == "OF") // lights off
+    else if (robotState[0] == 'O' && robotState[1] == 'F') // lights off
     {
       mode = 10;
     }
@@ -1474,12 +1604,6 @@ Serial.println();
 }
 
 void loop() {
-if (uninit) {
-delay(5000);
-uninit = false;
-Serial.println("start");
-}
-/*
   switch (mode) {
   case TEST_ENABLED:
     //Drive: solid orange, Lift: white up to lift position with top-most light orange
@@ -1526,9 +1650,7 @@ Serial.println("start");
     off(0);
     break;
   }
-*/
-disconnected2();
-/*
+  /*
 for (int i=0;i<NUM_DRIVE_LIGHTS;i++) {
   if (allianceColor == 'R') {
     leds[i] = red;
@@ -1541,7 +1663,9 @@ for (int i=NUM_DRIVE_LIGHTS;i<NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS;i++) {
   leds[i] = white;
 }
 FastLED.show();
-  delay(20);
-*/
+  while(timeElapsed < 21){
+  }
+  timeElapsed = 0;
+  */
 }
 
