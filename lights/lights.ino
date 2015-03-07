@@ -71,7 +71,15 @@ void testEnabled() {
   for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black; //reset all lights above that to black
   }
-  leds[topOffset-1] = orange; //set top-most light to orange
+  leds[NUM_DRIVE_LIGHTS] = orange;
+  leds[NUM_DRIVE_LIGHTS+9] = orange;
+  leds[NUM_DRIVE_LIGHTS+10] = orange;
+  leds[NUM_DRIVE_LIGHTS+36] = orange;
+  leds[NUM_DRIVE_LIGHTS+37] = orange;
+  leds[NUM_DRIVE_LIGHTS+63] = orange;
+  leds[NUM_DRIVE_LIGHTS+64] = orange;
+  leds[NUM_LEDS-2] = orange;
+  leds[NUM_LEDS-1] = orange; //set top-most light to orange
   FastLED.show();
 }
 
@@ -90,7 +98,15 @@ void testDisabled() {
   for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black; //set all lights above off
   }
-  leds[topOffset-1] = orange; //set top-most light to orange
+  leds[NUM_DRIVE_LIGHTS] = orange;
+  leds[NUM_DRIVE_LIGHTS+9] = orange;
+  leds[NUM_DRIVE_LIGHTS+10] = orange;
+  leds[NUM_DRIVE_LIGHTS+36] = orange;
+  leds[NUM_DRIVE_LIGHTS+37] = orange;
+  leds[NUM_DRIVE_LIGHTS+63] = orange;
+  leds[NUM_DRIVE_LIGHTS+64] = orange;
+  leds[NUM_LEDS-2] = orange;
+  leds[NUM_LEDS-1] = orange; //set top-most light to orange
   FastLED.show();
   while(timeElapsed < 101) {
   }
@@ -182,7 +198,15 @@ void autoEnabled() {
   for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black;
   }
-  leds[topOffset-1] = red; //set top-most light to red
+  leds[NUM_DRIVE_LIGHTS] = red;
+  leds[NUM_DRIVE_LIGHTS+9] = red;
+  leds[NUM_DRIVE_LIGHTS+10] = red;
+  leds[NUM_DRIVE_LIGHTS+36] = red;
+  leds[NUM_DRIVE_LIGHTS+37] = red;
+  leds[NUM_DRIVE_LIGHTS+63] = red;
+  leds[NUM_DRIVE_LIGHTS+64] = red;
+  leds[NUM_LEDS-2] = red;
+  leds[NUM_LEDS-1] = red; //set top-most light to red
   FastLED.show();
 }
 
@@ -215,7 +239,15 @@ void teleopEnabled() {
   for(int x=topOffset-1; x<NUM_LEDS; x++) {
     leds[x] = CRGB::Black;
   }
-  leds[topOffset-1] = blue; //set top-most light to blue
+  leds[NUM_DRIVE_LIGHTS] = blue;
+  leds[NUM_DRIVE_LIGHTS+9] = blue;
+  leds[NUM_DRIVE_LIGHTS+10] = blue;
+  leds[NUM_DRIVE_LIGHTS+36] = blue;
+  leds[NUM_DRIVE_LIGHTS+37] = blue;
+  leds[NUM_DRIVE_LIGHTS+63] = blue;
+  leds[NUM_DRIVE_LIGHTS+64] = blue;
+  leds[NUM_LEDS-2] = blue;
+  leds[NUM_LEDS-1] = blue; //set top-most light to blue
   FastLED.show();
 }
 
