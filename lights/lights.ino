@@ -53,7 +53,6 @@ void setup() {
 }
 
 void testEnabled() {
-  //Drive: solid orange, Lift: white up to lift position with top-most light orange
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     leds[x] = orange; //set drive lights orange
   }
@@ -73,8 +72,6 @@ void testEnabled() {
 }
 
 void testDisabled() {
-  //Drive: yellow pulse, Lift: White up to lift position with top-most light orange
-  pulseDriveTrain(2);
   //find number of lights needed to light up to lift position
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
@@ -128,9 +125,6 @@ void pulseDriveTrain(byte driveColor) {
 }
 
 void autoDisabled() {
-  //Drive: alliance color pulse, Lift: white and yellow alternating
-  if (allianceColor == 'B') pulseDriveTrain(0);
-  if (allianceColor == 'R') pulseDriveTrain(1);
   //set every other lift light to white
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_LEDS; x+=2) {
       leds[x] = white;
@@ -145,7 +139,6 @@ void autoDisabled() {
 }
 
 void autoEnabled() {
-  //Drive: alliance color, Lift: white with top-most red
   //set drive train color
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (allianceColor) {
@@ -178,7 +171,6 @@ void autoEnabled() {
 }
 
 void teleopEnabled() {
-  //Drive: alliance color, Lift: white on lift up to lift position with top-most blue
   for(int x=0; x<NUM_DRIVE_LIGHTS; x++) {
     switch (allianceColor) {
     case 'B':
@@ -209,9 +201,6 @@ void teleopEnabled() {
 }
 
 void teleopDisabled() {
-  //Drive: alliance color pulse, Lift: white and green alternating
-  if (allianceColor == 'B') pulseDriveTrain(0);
-  if (allianceColor == 'R') pulseDriveTrain(1);
   //set every other lift light to white
   for(int x=NUM_DRIVE_LIGHTS; x<NUM_LEDS; x+=2) {
       leds[x] = white;
@@ -1493,33 +1482,47 @@ Serial.println("start");
 /*
   switch (mode) {
   case TEST_ENABLED:
+    //Drive: solid orange, Lift: white up to lift position with top-most light orange
     testEnabled();
     break;
   case TEST_DISABLED:
+    //Drive: yellow pulse, Lift: White up to lift position with top-most light orange
+    pulseDriveTrain(2);
     testDisabled();
     break;
   case AUTO_ENABLED:
+    //Drive: alliance color, Lift: white with top-most red
     autoEnabled();
     break;
   case AUTO_DISABLED:
+    //Drive: alliance color pulse, Lift: white and yellow alternating
+    if (allianceColor == 'B') pulseDriveTrain(0);
+    if (allianceColor == 'R') pulseDriveTrain(1);
     autoDisabled();
     break;
   case TELEOP_ENABLED:
+    //Drive: alliance color, Lift: white on lift up to lift position with top-most blue
     teleopEnabled();
     break;
   case TELEOP_DISABLED:
+    //Drive: alliance color pulse, Lift: white and green alternating
+    if (allianceColor == 'B') pulseDriveTrain(0);
+    if (allianceColor == 'R') pulseDriveTrain(1);
     teleopDisabled();
     break;
   case DISCONNECTED:
+    //Drive and Lift: red, yellow, blue chase
     disconnected2();
     break;
   case FINISHED:
     finished();
     break;
   case ERROR_MODE:
+    //Drive and Lift: red and yellow flash
     errorMode();
     break;
   case OFF:
+    //Drive and Lift: all lights off, duh
     off(0);
     break;
   }
