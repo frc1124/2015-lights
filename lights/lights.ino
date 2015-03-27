@@ -209,7 +209,7 @@ void autoEnabled() {
   int topOffset = NUM_LEDS-lightsOn;
   CRGB liftPattern[160];
   for(int y=0;y<160;y++){
-    liftPattern[y] = gray;
+    liftPattern[y] = orange;
   }
   liftPattern[159] = liftPattern[158] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = AC;
   int number = 159;
