@@ -14,7 +14,8 @@ int counter = 0;
 #define NUM_DRIVE_LIGHTS 30
 CRGB leds[NUM_LEDS];
 char allianceColor = 'B';
-float liftPosition = 59.0;
+float liftPosition = 59.0; 
+float currentLift = 0.0;
 int a, b, c, v, w, y, z;
 
 boolean uninit = true;
@@ -59,49 +60,27 @@ void testEnabled() {
     leds[x] = orange; //set drive lights orange
   }
   //find number of lights needed to light up to lift position
-  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
   if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_LEDS-lightsOn;
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = gray; //set lights white up to there
-    if (x == topOffset-2){
-    leds[x] = orange;
-    }
-    if (x == topOffset-1){
-    leds[x] = orange;
-    }
-    if (x == topOffset-27){
-    leds[x] = orange;
-    }
-    if (x == topOffset-28){
-    leds[x] = orange;
-    }
-    if (x == topOffset-53){
-    leds[x] = orange;
-    }
-    if (x == topOffset-54){
-    leds[x] = orange;
-    }
-    if (x == topOffset-79){
-    leds[x] = orange;
-    }
-    if (x == topOffset-80){
-    leds[x] = orange;
-    }
+  CRGB liftPattern[160];
+  for(int y=0;y<160;y++){
+    liftPattern[y] = gray;
   }
-  for(int x=topOffset; x<NUM_LEDS; x++) {
-    leds[x] = CRGB::Black; //reset all lights above that to black
+  liftPattern[159] = liftPattern[158] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = orange;
+  int number = 159;
+  for(int x=topOffset;x>=NUM_DRIVE_LIGHTS;x--){
+    if(x<NUM_LEDS){
+      leds[x] = liftPattern[number];
+    }
+      Serial.println(number);
+      number--;
   }
-/*  leds[NUM_DRIVE_LIGHTS+9] = orange;
-  leds[NUM_DRIVE_LIGHTS+10] = orange;
-  leds[NUM_DRIVE_LIGHTS+36] = orange;
-  leds[NUM_DRIVE_LIGHTS+37] = orange;
-  leds[NUM_DRIVE_LIGHTS+63] = orange;
-  leds[NUM_DRIVE_LIGHTS+64] = orange;
-  leds[NUM_LEDS-2] = orange; */
+  for(int z=topOffset;z<NUM_LEDS;z++){
+    leds[z] = CRGB::Black;
+  }
   leds[NUM_LEDS-1] = orange; //set top-most light to orange
   FastLED.show();
 }
@@ -109,50 +88,27 @@ void testEnabled() {
 void testDisabled() {
   elapsedMillis timeElapsed = 0;
   //find number of lights needed to light up to lift position
-  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
   if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
-  int lightsOn =  NUM_LIFT_LIGHTS - lights;
+  int lightsOn = NUM_LIFT_LIGHTS - lights;
   int topOffset = NUM_LEDS-lightsOn;
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = gray;
-    if (x == topOffset-1){
-    leds[x] = orange;
-    }
-    if (x == topOffset-2){
-    leds[x] = orange;
-    }
-    if (x == topOffset-27){
-    leds[x] = orange;
-    }
-    if (x == topOffset-28){
-    leds[x] = orange;
-    }
-    if (x == topOffset-53){
-    leds[x] = orange;
-    }
-    if (x == topOffset-54){
-    leds[x] = orange;
-    }
-    if (x == topOffset-79){
-    leds[x] = orange;
-    }
-    if (x == topOffset-80){
-    leds[x] = orange;
-    }
+  CRGB liftPattern[160];
+  for(int y=0;y<160;y++){
+    liftPattern[y] = gray;
   }
-  for(int x=topOffset; x<NUM_LEDS; x++) {
-    leds[x] = CRGB::Black; //set all lights above off
+  liftPattern[159] = liftPattern[158] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = orange;
+  int number = 159;
+  for(int x=topOffset;x>=NUM_DRIVE_LIGHTS;x--){
+    if(x<NUM_LEDS){
+      leds[x] = liftPattern[number];
+    }
+      Serial.println(number);
+      number--;
   }
-/*  leds[NUM_DRIVE_LIGHTS] = orange;
-  leds[NUM_DRIVE_LIGHTS+9] = orange;
-  leds[NUM_DRIVE_LIGHTS+10] = orange;
-  leds[NUM_DRIVE_LIGHTS+36] = orange;
-  leds[NUM_DRIVE_LIGHTS+37] = orange;
-  leds[NUM_DRIVE_LIGHTS+63] = orange;
-  leds[NUM_DRIVE_LIGHTS+64] = orange;
-  leds[NUM_LEDS-2] = orange; */
+  for(int z=topOffset;z<NUM_LEDS;z++){
+    leds[z] = CRGB::Black;
+  }
   leds[NUM_LEDS-1] = orange; //set top-most light to orange
   FastLED.show();
   while(timeElapsed < 101) {
@@ -220,8 +176,7 @@ void autoDisabled() {
 
 void autoEnabled() {
   CRGB AC;
-  elapsedMillis timeElapsed = 0; 
-  //set drive train color
+  elapsedMillis timeElapsed = 0;
   switch (allianceColor){
     case 'B':
       AC = blue;
@@ -242,56 +197,32 @@ void autoEnabled() {
       leds[x] = red;
       break;
     default:
-      leds[x] = CRGB::Black; //off means something broke
+      leds[x] = CRGB::Black; //turn off things when they break
       break;
     }
   }
   //find number of lights needed to light up to lift position
-  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
   if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
-  int topOffset = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
-  //set lights up to that point to white
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = yellow;
-    if (x == topOffset-2){
-    leds[x] = AC;
-    }
-    if (x == topOffset-1){
-    leds[x] = AC;
-    }
-    if (x == topOffset-27){
-    leds[x] = AC;
-    }
-    if (x == topOffset-28){
-    leds[x] = AC;
-    }
-    if (x == topOffset-53){
-    leds[x] = AC;
-    }
-    if (x == topOffset-54){
-    leds[x] = AC;
-    }
-    if (x == topOffset-79){
-    leds[x] = AC;
-    }
-    if (x == topOffset-80){
-    leds[x] = AC;
-    }
+  int topOffset = NUM_LEDS-lightsOn;
+  CRGB liftPattern[160];
+  for(int y=0;y<160;y++){
+    liftPattern[y] = gray;
   }
-  //reset all others to black
-  for(int x=topOffset; x<NUM_LEDS; x++) {
-    leds[x] = CRGB::Black;
+  liftPattern[159] = liftPattern[158] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = AC;
+  int number = 159;
+  for(int x=topOffset;x>=NUM_DRIVE_LIGHTS;x--){
+    if(x<NUM_LEDS){
+      leds[x] = liftPattern[number];
+    }
+      Serial.println(number);
+      number--;
   }
-/*  leds[NUM_DRIVE_LIGHTS+9] = red;
-  leds[NUM_DRIVE_LIGHTS+10] = red;
-  leds[NUM_DRIVE_LIGHTS+36] = red;
-  leds[NUM_DRIVE_LIGHTS+37] = red;
-  leds[NUM_DRIVE_LIGHTS+63] = red;
-  leds[NUM_DRIVE_LIGHTS+64] = red;
-  leds[NUM_LEDS-2] = red; */
+  for(int z=topOffset;z<NUM_LEDS;z++){
+    leds[z] = CRGB::Black;
+  }
   leds[NUM_LEDS-1] = red; //set top-most light to red
   FastLED.show();
 }
@@ -324,50 +255,27 @@ void teleopEnabled() {
     }
   }
   //find number of lights needed to light up to lift position
-  if (liftPosition > MAX_LIFT) liftPosition = MAX_LIFT;
   if (liftPosition < 0) liftPosition = 0;
   int percent = liftPosition / MAX_LIFT * 100;
   int lights = NUM_LIFT_LIGHTS * percent / 100;
   int lightsOn = NUM_LIFT_LIGHTS - lights;
-  int topOffset = NUM_DRIVE_LIGHTS+NUM_LIFT_LIGHTS-lightsOn;
-  for(int x=NUM_DRIVE_LIGHTS; x<topOffset; x++) {
-    leds[x] = gray;
-    if (x == topOffset-2){
-    leds[x] = AC;
-    }
-    if (x == topOffset-1){
-    leds[x] = AC;
-    }
-    if (x == topOffset-27){
-    leds[x] = AC;
-    }
-    if (x == topOffset-28){
-    leds[x] = AC;
-    }
-    if (x == topOffset-53){
-    leds[x] = AC;
-    }
-    if (x == topOffset-54){
-    leds[x] = AC;
-    }
-    if (x == topOffset-79){
-    leds[x] = AC;
-    }
-    if (x == topOffset-80){
-    leds[x] = AC;
-    }
+  int topOffset = NUM_LEDS-lightsOn;
+  CRGB liftPattern[160];
+  for(int y=0;y<160;y++){
+    liftPattern[y] = gray;
   }
-  //reset all others to black
-  for(int x=topOffset; x<NUM_LEDS; x++) {
-    leds[x] = CRGB::Black;
+  liftPattern[159] = liftPattern[158] = liftPattern[157] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = AC;
+  int number = 159;
+  for(int x=topOffset;x>=NUM_DRIVE_LIGHTS;x--){
+    if(x<NUM_LEDS){
+      leds[x] = liftPattern[number];
+    }
+      Serial.println(number);
+      number--;
   }
-/*  leds[NUM_DRIVE_LIGHTS+9] = blue;
-  leds[NUM_DRIVE_LIGHTS+10] = blue;
-  leds[NUM_DRIVE_LIGHTS+36] = blue;
-  leds[NUM_DRIVE_LIGHTS+37] = blue;
-  leds[NUM_DRIVE_LIGHTS+63] = blue;
-  leds[NUM_DRIVE_LIGHTS+64] = blue;
-  leds[NUM_LEDS-2] = blue; */
+  for(int z=topOffset;z<NUM_LEDS;z++){
+    leds[z] = CRGB::Black;
+  }
   leds[NUM_LEDS-1] = blue; //set top-most light to blue
   FastLED.show();
 }
@@ -411,7 +319,7 @@ void disconnected2() {
     }
 
     // Fill in the lights for the lift
-    for (int x=NUM_LEDS-1;x>=NUM_DRIVE_LIGHTS;x--) {
+    for (int x=NUM_DRIVE_LIGHTS;x<NUM_LEDS;x++) {
       // Find the current pattern color using both starting pattern offset and the current LED
       int y = 11-((start+x)%12);
       leds[x] = pattern[y];
