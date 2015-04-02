@@ -75,10 +75,9 @@ void testEnabled() {
     if(x<NUM_LEDS){
       leds[x] = liftPattern[number];
     }
-      Serial.println(number);
       number--;
   }
-  for(int z=topOffset;z<NUM_LEDS;z++){
+  for(int z=topOffset+1;z<NUM_LEDS;z++){
     leds[z] = CRGB::Black;
   }
   leds[NUM_LEDS-1] = orange; //set top-most light to orange
@@ -103,10 +102,9 @@ void testDisabled() {
     if(x<NUM_LEDS){
       leds[x] = liftPattern[number];
     }
-      Serial.println(number);
       number--;
   }
-  for(int z=topOffset;z<NUM_LEDS;z++){
+  for(int z=topOffset+1;z<NUM_LEDS;z++){
     leds[z] = CRGB::Black;
   }
   leds[NUM_LEDS-1] = orange; //set top-most light to orange
@@ -217,10 +215,9 @@ void autoEnabled() {
     if(x<NUM_LEDS){
       leds[x] = liftPattern[number];
     }
-      Serial.println(number);
       number--;
   }
-  for(int z=topOffset;z<NUM_LEDS;z++){
+  for(int z=topOffset+1;z<NUM_LEDS;z++){
     leds[z] = CRGB::Black;
   }
   leds[NUM_LEDS-1] = red; //set top-most light to red
@@ -264,16 +261,15 @@ void teleopEnabled() {
   for(int y=0;y<160;y++){
     liftPattern[y] = gray;
   }
-  liftPattern[159] = liftPattern[158] = liftPattern[157] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = AC;
+  liftPattern[159] = liftPattern[158] = liftPattern[133] = liftPattern[132] = liftPattern[107] = liftPattern[106] = liftPattern[81] = liftPattern[80] = AC;
   int number = 159;
   for(int x=topOffset;x>=NUM_DRIVE_LIGHTS;x--){
     if(x<NUM_LEDS){
       leds[x] = liftPattern[number];
     }
-      Serial.println(number);
       number--;
   }
-  for(int z=topOffset;z<NUM_LEDS;z++){
+  for(int z=topOffset+1;z<NUM_LEDS;z++){
     leds[z] = CRGB::Black;
   }
   leds[NUM_LEDS-1] = blue; //set top-most light to blue
